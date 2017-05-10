@@ -12,6 +12,18 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            output.outputFile = new File(
+                    output.outputFile.parent,
+                    "VideoPanel " + defaultConfig.versionName.toString() +
+                            "(" + defaultConfig.versionCode.toString() + ")("
+                            + variant.name + ")"
+                            + ".apk")
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -22,6 +34,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+
 }
 
 dependencies {
