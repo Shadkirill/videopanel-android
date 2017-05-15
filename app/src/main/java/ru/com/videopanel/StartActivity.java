@@ -1,9 +1,12 @@
 package ru.com.videopanel;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.MediaController;
+import android.widget.VideoView;
 
 import java.util.List;
 
@@ -19,11 +22,14 @@ import ru.com.videopanel.models.Playlist;
 import ru.com.videopanel.models.PlaylistInfo;
 
 public class StartActivity extends AppCompatActivity {
-
+    VideoView videoView;
+    MediaController mediacontroller;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+        videoView = (VideoView) findViewById(R.id.videoView);
+
     }
 
     public void onStartClick(View view) {
@@ -37,10 +43,12 @@ public class StartActivity extends AppCompatActivity {
                 .flatMap(playlistInfo ->
                         service.playlistData(playlistInfo.getId()).subscribeOn(Schedulers.io())
                 )
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new DisposableObserver<Playlist>() {
                     @Override
                     public void onNext(@NonNull Playlist playlist) {
-                        Log.d("LOG", String.valueOf(playlist.getItems().get(0).getUrl()) + "  " + String.valueOf(playlist.getAllowedDates().get(0).getStart()));
+                        startPlayer(playlist.getItems().get(2).getUrl());
+                        Log.d("LOG", String.valueOf(playlist.getItems().get(2).getUrl()) + "  " + String.valueOf(playlist.getAllowedDates().get(0).getStart()));
                     }
 
                     @Override
@@ -53,6 +61,7 @@ public class StartActivity extends AppCompatActivity {
 
                     }
                 });
+
 
 
     }
@@ -92,6 +101,30 @@ public class StartActivity extends AppCompatActivity {
                         error -> Log.d("LOG", "ERROR", error),
                         () -> {
                         });
+        videoView.pause();
+        videoView.stopPlayback();
+    }
 
+    private void startPlayer(String videoPath) {
+        try {
+            mediacontroller = new MediaController(
+                    this);
+            mediacontroller.setAnchorView(videoView);
+            // Get the URL from String VideoURL
+            Uri video = Uri.parse(videoPath);
+//            videoView.setMediaController(mediacontroller);
+            videoView.setVideoURI(video);
+
+        } catch (Exception e) {
+            Log.e("Error", e.getMessage());
+            e.printStackTrace();
+        }
+
+        videoView.requestFocus();
+        videoView.setOnPreparedListener(mp -> {
+            videoView.start();
+            mp.setLooping(true);
+
+        });
     }
 }
