@@ -107,12 +107,7 @@ public class StartActivity extends AppCompatActivity {
 
     private void startPlayer(String videoPath) {
         try {
-            mediacontroller = new MediaController(
-                    this);
-            mediacontroller.setAnchorView(videoView);
-            // Get the URL from String VideoURL
             Uri video = Uri.parse(videoPath);
-//            videoView.setMediaController(mediacontroller);
             videoView.setVideoURI(video);
 
         } catch (Exception e) {
