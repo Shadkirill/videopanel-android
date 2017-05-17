@@ -1,27 +1,29 @@
 package ru.com.videopanel.db.dao;
 
+import java.util.Date;
+
 import io.realm.RealmObject;
 
 public class AllowedDateDAO extends RealmObject {
     public static final String COL_START = "start";
     public static final String COL_END = "end";
 
-    private String start;
-    private String end;
+    private Date start;
+    private Date end;
 
-    public String getStart() {
+    public Date getStart() {
         return start;
     }
 
-    public void setStart(String start) {
+    public void setStart(Date start) {
         this.start = start;
     }
 
-    public String getEnd() {
+    public Date getEnd() {
         return end;
     }
 
-    public void setEnd(String end) {
+    public void setEnd(Date end) {
         this.end = end;
     }
 

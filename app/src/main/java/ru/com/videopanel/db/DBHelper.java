@@ -1,5 +1,9 @@
 package ru.com.videopanel.db;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+
 import io.reactivex.Observable;
 import io.realm.Realm;
 import ru.com.videopanel.db.dao.AllowedDateDAO;
@@ -21,8 +25,16 @@ public class DBHelper {
 
         for (AllowedDate allowedDate : playlist.getAllowedDates()) {
             AllowedDateDAO allowedDateDAO = realm.createObject(AllowedDateDAO.class);
-            allowedDateDAO.setStart(allowedDate.getStart());
-            allowedDateDAO.setEnd(allowedDate.getEnd());
+            SimpleDateFormat format = new SimpleDateFormat(
+                    "yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);//2017-01-01T13:00:00+03:00
+            try {
+                allowedDateDAO.setStart(format.parse(allowedDate.getStart()));
+                allowedDateDAO.setEnd(format.parse(allowedDate.getStart()));
+            } catch (ParseException e) {
+                e.printStackTrace();
+                //TODO send error to server
+            }
+
             playlistDAO.getDates().add(allowedDateDAO);
         }
 
