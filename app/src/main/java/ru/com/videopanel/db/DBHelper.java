@@ -2,6 +2,9 @@ package ru.com.videopanel.db;
 
 import io.reactivex.Observable;
 import io.realm.Realm;
+import ru.com.videopanel.db.dao.AllowedDateDAO;
+import ru.com.videopanel.db.dao.ItemDAO;
+import ru.com.videopanel.db.dao.PlaylistDAO;
 import ru.com.videopanel.db.dbutil.RealmResultsObservable;
 import ru.com.videopanel.models.AllowedDate;
 import ru.com.videopanel.models.Item;
@@ -27,7 +30,7 @@ public class DBHelper {
             ItemDAO itemDAO = realm.createObject(ItemDAO.class);
             itemDAO.setItemType(item.getItemType());
             itemDAO.setCrc32(item.getCrc32());
-            itemDAO.setDuration(item.getDuration());
+            itemDAO.setDuration(Math.round(item.getDuration() != null ? item.getDuration() : 0));
             itemDAO.setUrl(item.getUrl());
             playlistDAO.getItems().add(itemDAO);
         }

@@ -1,4 +1,4 @@
-package ru.com.videopanel.db;
+package ru.com.videopanel.db.dao;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;

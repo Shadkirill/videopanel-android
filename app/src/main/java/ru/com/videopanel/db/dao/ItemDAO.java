@@ -1,4 +1,4 @@
-package ru.com.videopanel.db;
+package ru.com.videopanel.db.dao;
 
 import io.realm.RealmObject;
 
@@ -8,9 +8,13 @@ public class ItemDAO extends RealmObject {
     public static final String COL_DURATION = "duration";
     public static final String COL_CRC32 = "crc32";
 
+    public static final String TYPE_IMAGE = "Image";
+    public static final String TYPE_VIDEO = "Video";
+
+
     private String itemType;
     private String url;
-    private Double duration;
+    private Long duration;
     private String crc32;
 
     public String getItemType() {
@@ -29,11 +33,11 @@ public class ItemDAO extends RealmObject {
         this.url = url;
     }
 
-    public Double getDuration() {
+    public Long getDuration() {
         return duration;
     }
 
-    public void setDuration(Double duration) {
+    public void setDuration(Long duration) {
         this.duration = duration;
     }
 
