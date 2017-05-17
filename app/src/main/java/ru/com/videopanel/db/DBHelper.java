@@ -1,11 +1,7 @@
 package ru.com.videopanel.db;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.annotations.NonNull;
-import io.reactivex.functions.Function;
 import io.realm.Realm;
-import io.realm.RealmResults;
 import ru.com.videopanel.db.dbutil.RealmResultsObservable;
 import ru.com.videopanel.models.AllowedDate;
 import ru.com.videopanel.models.Item;
@@ -39,16 +35,10 @@ public class DBHelper {
         realm.commitTransaction();
     }
 
-    public static Observable<Object> getAllPlaylist() {
+    public static Observable<PlaylistDAO> getAllPlaylist() {
         Realm realm = getRealm();
         return RealmResultsObservable
-                .from(realm.where(PlaylistDAO.class).findAll())
-                .flatMap(new Function<RealmResults<PlaylistDAO>, ObservableSource<?>>() {
-                    @Override
-                    public Observable<PlaylistDAO> apply(@NonNull RealmResults<PlaylistDAO> playlistDAOs) throws Exception {
-                        return Observable.fromIterable(realm.copyFromRealm(playlistDAOs));
-                    }
-                });
+                .from(realm.where(PlaylistDAO.class).findAll());
     }
 
     private static Realm getRealm() {

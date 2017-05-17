@@ -4,6 +4,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.functions.Cancellable;
+import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmObject;
 import io.realm.RealmResults;
@@ -29,8 +30,9 @@ public class RealmResultsObservable<T extends RealmObject> implements Observable
         this.realmResults = realmResults;
     }
 
-    public static <T extends RealmObject> Observable<RealmResults<T>> from(RealmResults<T> realmResults) {
-        return Observable.create(new RealmResultsObservable<>(realmResults));
+    public static <T extends RealmObject> Observable<T> from(RealmResults<T> realmResults) {
+        return Observable.fromIterable(Realm.getDefaultInstance().copyFromRealm(realmResults));
+//        Observable.create(new RealmResultsObservable<>(realmResults));
     }
 
     @Override

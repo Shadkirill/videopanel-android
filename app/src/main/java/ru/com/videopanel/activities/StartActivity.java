@@ -1,4 +1,4 @@
-package ru.com.videopanel;
+package ru.com.videopanel.activities;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -10,10 +10,12 @@ import java.util.List;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import io.realm.RealmList;
+import ru.com.videopanel.R;
 import ru.com.videopanel.api.ServiceGenerator;
 import ru.com.videopanel.api.VideoService;
 import ru.com.videopanel.db.DBHelper;
-import ru.com.videopanel.db.PlaylistDAO;
+import ru.com.videopanel.db.ItemDAO;
 import ru.com.videopanel.models.PlaylistInfo;
 
 public class StartActivity extends AppCompatActivity {
@@ -46,8 +48,13 @@ public class StartActivity extends AppCompatActivity {
 
     public void onRedClick(View view) {
         DBHelper.getAllPlaylist()
+                .firstElement()
                 .subscribe(
-                        playlist -> Log.d("LOG", ((PlaylistDAO) playlist).getItems().get(0).getUrl()),
+                        playlist -> {
+                            Log.d("LOG", playlist.getLastUpdated());
+                            RealmList<ItemDAO> items = playlist.getItems();
+
+                        },
                         error -> Log.d("LOG", "ERROR", error),
                         () -> {
                         }
