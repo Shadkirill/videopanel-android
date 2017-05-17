@@ -9,6 +9,8 @@ import android.widget.ImageView;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.File;
+
 import ru.com.videopanel.R;
 
 public class ImageActivity extends AppCompatActivity {
@@ -30,7 +32,7 @@ public class ImageActivity extends AppCompatActivity {
         Bundle b = getIntent().getExtras();
         String url = b.getString("url");
         Long duration = b.getLong("duration");
-        Picasso.with(this).load(url).into(imageView);
+        Picasso.with(this).load(new File(url)).into(imageView);
 
         Handler handler = new Handler();
         handler.postDelayed(() -> {
