@@ -4,6 +4,9 @@ import android.app.Application;
 
 import com.squareup.leakcanary.LeakCanary;
 
+import io.realm.Realm;
+import ru.com.videopanel.db.DBHelper;
+
 /**
  * Main App class
  */
@@ -12,6 +15,11 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Realm.init(this);
+        //TODO remove after tests
+        DBHelper.clearDB();
+
         //Leak analyzer setup
         if (LeakCanary.isInAnalyzerProcess(this)) {
             return;
