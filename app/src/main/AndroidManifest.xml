@@ -23,16 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!-- <activity -->
-        <!-- android:name=".activities.VideoActivity" -->
-        <!-- /> -->
-        <!-- <activity -->
-        <!-- android:name=".activities.ImageActivity" -->
-        <!-- android:screenOrientation="landscape" /> -->
         <activity
             android:name=".activities.ShowActivity"
             android:screenOrientation="landscape" />
-        <!---->
     </application>
 
 </manifest>

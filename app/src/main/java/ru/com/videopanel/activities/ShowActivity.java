@@ -17,6 +17,7 @@ import android.widget.VideoView;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 import ru.com.videopanel.R;
 import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.db.dao.ItemDAO;
@@ -27,6 +28,7 @@ public class ShowActivity extends AppCompatActivity {
     private VideoView videoView;
     private ImageView imageView;
     private int currentPlayItem = -1;
+    private Disposable subscribe;
 
     public static void ImageViewAnimatedChange(Context c, final ImageView v, final String new_image) {
         final Animation anim_out = AnimationUtils.loadAnimation(c, android.R.anim.fade_out);
@@ -76,7 +78,8 @@ public class ShowActivity extends AppCompatActivity {
         videoView = (VideoView) findViewById(R.id.videoView);
         imageView = (ImageView) findViewById(R.id.imageView);
 
-        Observable.interval(1, TimeUnit.SECONDS)
+
+        subscribe = Observable.interval(1, TimeUnit.SECONDS)
                 .map(aLong -> {
                     return aLong;
                 })
@@ -89,6 +92,12 @@ public class ShowActivity extends AppCompatActivity {
 //        getPlaylist();
 
         planPlaylists();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        subscribe.dispose();
     }
 
     private void planPlaylists() {

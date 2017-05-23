@@ -30,11 +30,11 @@ import ru.com.videopanel.api.ServiceGenerator;
 import ru.com.videopanel.api.VideoService;
 import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.models.Item;
-import ru.com.videopanel.models.PlaylistInfo;
 
 public class StartActivity extends AppCompatActivity {
 
 
+    private String token;
 
     public static long checksumMappedFile(String filepath) throws IOException {
         FileInputStream inputStream = new FileInputStream(filepath);
@@ -57,15 +57,18 @@ public class StartActivity extends AppCompatActivity {
 
     public void onGreenClick(View view) {
         Toast.makeText(this, "Загрузка плейлистов началась. Это может занять время", Toast.LENGTH_LONG).show();
-        VideoService service = ServiceGenerator.createService(VideoService.class, "username", "password");
+        VideoService service = ServiceGenerator.createService(VideoService.class);
 
-        Observable<List<PlaylistInfo>> playlistInfoObservable = service.playlists();
-        playlistInfoObservable
+        service.login("AA", "A")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .flatMap(receivedToken -> {
+                    token = receivedToken.getToken();
+                    return service.playlists(token).subscribeOn(Schedulers.io());
+                })
                 .flatMap(Observable::fromIterable)
                 .flatMap(playlistInfo ->
-                        service.playlistData(playlistInfo.getId()).subscribeOn(Schedulers.io())
+                        service.playlistData(playlistInfo.getId(), token).subscribeOn(Schedulers.io())
                 )
                 .map(playlist -> {
                     List<Item> items = playlist.getItems();
@@ -79,13 +82,22 @@ public class StartActivity extends AppCompatActivity {
                     DBHelper.addPlaylist(playlist);
                     return playlist;
                 })
+                .doOnComplete(() -> {
+                    service.logout(token).subscribeOn(Schedulers.io()).subscribe(
+                            (playlist) -> {
+                                Log.d("LOG", String.valueOf(playlist.code()));
+                            },
+                            error -> Log.d("LOG", "ERROR", error),
+                            () -> {
+                            }
+                    );
+                })
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe((playlist) -> {
+                .subscribe(
+                        (playlist) -> {
                         },
                         error -> Log.d("LOG", "ERROR", error),
-                        () -> {
-                            Toast.makeText(this, "Загрузка плейлистов окончена", Toast.LENGTH_LONG).show();
-                        }
+                        () -> Toast.makeText(this, "Загрузка плейлистов окончена", Toast.LENGTH_LONG).show()
                 );
     }
 
@@ -125,7 +137,6 @@ public class StartActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ShowActivity.class);
         startActivity(intent);
     }
-
 
 
     public void onYellowClick(View view) {
