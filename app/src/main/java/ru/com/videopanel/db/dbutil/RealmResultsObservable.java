@@ -3,7 +3,6 @@ package ru.com.videopanel.db.dbutil;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
-import io.reactivex.functions.Cancellable;
 import io.realm.Realm;
 import io.realm.RealmChangeListener;
 import io.realm.RealmObject;
@@ -36,20 +35,10 @@ public class RealmResultsObservable<T extends RealmObject> implements Observable
         // Initial element
         emitter.onNext(realmResults);
 
-        RealmChangeListener<RealmResults<T>> changeListener = new RealmChangeListener<RealmResults<T>>() {
-            @Override
-            public void onChange(RealmResults<T> element) {
-                emitter.onNext(element);
-            }
-        };
+        RealmChangeListener<RealmResults<T>> changeListener = element -> emitter.onNext(element);
 
         realmResults.addChangeListener(changeListener);
 
-        emitter.setCancellable(new Cancellable() {
-            @Override
-            public void cancel() throws Exception {
-                realmResults.removeChangeListener(changeListener);
-            }
-        });
+        emitter.setCancellable(() -> realmResults.removeChangeListener(changeListener));
     }
 }

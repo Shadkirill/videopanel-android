@@ -1,8 +1,10 @@
 package ru.com.videopanel.activities;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -32,9 +34,11 @@ import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.models.Item;
 
 public class StartActivity extends AppCompatActivity {
-
-
     private String token;
+    private View login_layout;
+    private View start_layout;
+
+    private SharedPreferences prefs = null;
 
     public static long checksumMappedFile(String filepath) throws IOException {
         FileInputStream inputStream = new FileInputStream(filepath);
@@ -53,6 +57,25 @@ public class StartActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
+        login_layout = findViewById(R.id.login_layout);
+        start_layout = findViewById(R.id.start_layout);
+        prefs = getSharedPreferences("ru.com.videopanel", MODE_PRIVATE);
+
+        if (TextUtils.isEmpty(prefs.getString("login", null))) {
+            showLogin();
+        } else {
+            showStart();
+        }
+    }
+
+    private void showStart() {
+        login_layout.setVisibility(View.GONE);
+        start_layout.setVisibility(View.VISIBLE);
+    }
+
+    private void showLogin() {
+        login_layout.setVisibility(View.VISIBLE);
+        start_layout.setVisibility(View.GONE);
     }
 
     public void onGreenClick(View view) {
