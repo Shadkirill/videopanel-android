@@ -56,6 +56,11 @@ public class DBHelper {
                 .from(realm.where(PlaylistDAO.class).findAll());
     }
 
+    /**
+     * Get
+     *
+     * @return
+     */
     private static Realm getRealm() {
         return Realm.getDefaultInstance();
     }

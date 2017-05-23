@@ -16,7 +16,6 @@ import ru.com.videopanel.models.PlaylistInfo;
 /**
  * Retrofit api interface
  */
-
 public interface VideoService {
     @GET("playlists")
     Observable<List<PlaylistInfo>> playlists();

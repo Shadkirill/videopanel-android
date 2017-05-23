@@ -8,9 +8,8 @@ import io.realm.Realm;
 import ru.com.videopanel.db.DBHelper;
 
 /**
- * Main App class
+ * Main App class. Need to initialize app related libs
  */
-
 public class App extends Application {
     @Override
     public void onCreate() {

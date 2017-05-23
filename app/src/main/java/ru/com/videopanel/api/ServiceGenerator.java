@@ -8,24 +8,51 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+/**
+ * Retrofit service generator
+ */
 public class ServiceGenerator {
-
+    /**
+     * Backend server base URL
+     */
     private static final String API_BASE_URL = "http://videopanel.getsandbox.com/";
 
+    /**
+     * Custom http client for retrofit
+     */
     private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
+    /**
+     * Retrofit service builder
+     */
     private static Retrofit.Builder builder =
             new Retrofit.Builder()
                     .baseUrl(API_BASE_URL)
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(GsonConverterFactory.create());
 
+    /**
+     * Retrofit service
+     */
     private static Retrofit retrofit = builder.build();
 
+    /**
+     * Create typed retrofit service
+     *
+     * @param serviceClass Retrofit interface .class
+     * @return Service object typed of serviceClass parameter
+     */
     public static <S> S createService(Class<S> serviceClass) {
         return createService(serviceClass, null, null);
     }
 
+    /**
+     * Create typed retrofit service with basic authentication
+     * @param serviceClass Retrofit interface .class
+     * @param username HTTP basic username
+     * @param password HTTP basic password
+     * @return Service object typed of serviceClass parameter
+     */
     public static <S> S createService(
             Class<S> serviceClass, String username, String password) {
         if (!TextUtils.isEmpty(username)
@@ -37,6 +64,12 @@ public class ServiceGenerator {
         return createService(serviceClass, null, null);
     }
 
+    /**
+     * Create typed retrofit service with basic authentication
+     * @param serviceClass Retrofit interface .class
+     * @param authToken HTTP basic auth token
+     * @return Service object typed of serviceClass parameter
+     */
     private static <S> S createService(
             Class<S> serviceClass, final String authToken) {
         if (!TextUtils.isEmpty(authToken)) {
