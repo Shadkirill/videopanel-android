@@ -80,9 +80,6 @@ public class ShowActivity extends AppCompatActivity {
 
 
         subscribe = Observable.interval(1, TimeUnit.SECONDS)
-                .map(aLong -> {
-                    return aLong;
-                })
                 .subscribe((playlist) -> {
                             Log.d("AAA", playlist.toString());
                         },

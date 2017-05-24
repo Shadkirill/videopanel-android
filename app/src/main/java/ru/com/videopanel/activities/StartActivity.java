@@ -1,12 +1,14 @@
 package ru.com.videopanel.activities;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -32,13 +34,17 @@ import ru.com.videopanel.api.ServiceGenerator;
 import ru.com.videopanel.api.VideoService;
 import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.models.Item;
+import ru.com.videopanel.utisl.PreferenceUtil;
 
 public class StartActivity extends AppCompatActivity {
     private String token;
     private View login_layout;
     private View start_layout;
+    private EditText loginEdit;
+    private EditText passwordEdit;
+    private Button startPanel;
 
-    private SharedPreferences prefs = null;
+    private PreferenceUtil preferenceUtil;
 
     public static long checksumMappedFile(String filepath) throws IOException {
         FileInputStream inputStream = new FileInputStream(filepath);
@@ -59,13 +65,58 @@ public class StartActivity extends AppCompatActivity {
         setContentView(R.layout.activity_start);
         login_layout = findViewById(R.id.login_layout);
         start_layout = findViewById(R.id.start_layout);
-        prefs = getSharedPreferences("ru.com.videopanel", MODE_PRIVATE);
+        preferenceUtil = new PreferenceUtil(this);
 
-        if (TextUtils.isEmpty(prefs.getString("login", null))) {
-            showLogin();
-        } else {
+        loginEdit = (EditText) findViewById(R.id.login_edit);
+        passwordEdit = (EditText) findViewById(R.id.password_edit);
+
+        if (preferenceUtil.isLogin()) {
             showStart();
+        } else {
+            showLogin();
         }
+    }
+
+    public void onLoginClick(View view) {
+        String login = loginEdit.getText().toString();
+        if (TextUtils.isEmpty(login)) {
+            showErrorAlert(R.string.login_missed);
+            return;
+        }
+
+        String password = passwordEdit.getText().toString();
+        if (TextUtils.isEmpty(password)) {
+            showErrorAlert(R.string.password_missed);
+            return;
+        }
+
+        VideoService service = ServiceGenerator.createService(VideoService.class);
+        service.login(login, password)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        (receivedToken) -> {
+                            token = receivedToken.getToken();
+                            preferenceUtil.setLoginAndPassword(login, password);
+                            showStart();
+                        },
+                        error -> {
+                            //TODO Log error
+                            Log.d("LOG", "ERROR", error);
+                            showErrorAlert(R.string.incorrect_login_or_password);
+                        },
+                        () -> {
+                        }
+                );
+    }
+
+    private void showErrorAlert(int errorMessageStringResource) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(errorMessageStringResource)
+                .setTitle(R.string.error)
+                .setPositiveButton(R.string.ok, null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 
     private void showStart() {
@@ -163,5 +214,25 @@ public class StartActivity extends AppCompatActivity {
 
 
     public void onYellowClick(View view) {
+    }
+
+
+    public void onLogoutClick(View view) {
+        VideoService service = ServiceGenerator.createService(VideoService.class);
+        service.logout(token)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                        (response) -> {
+                            Log.d("LOG", String.valueOf(response.code()));
+                            preferenceUtil.removeLoginAndPassword();
+                            showLogin();
+                        },
+                        error -> Log.d("LOG", "ERROR", error),
+                        () -> {
+                            preferenceUtil.removeLoginAndPassword();
+                            showLogin();
+                        }
+                );
     }
 }

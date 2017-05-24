@@ -5,4 +5,9 @@
     <string name="login_button_text">Login</string>
     <string name="start_panel_button_text">Start panel</string>
     <string name="logout_button_text">Logout</string>
+    <string name="error">Error</string>
+    <string name="login_missed">Login missed</string>
+    <string name="ok">OK</string>
+    <string name="password_missed">Password missed</string>
+    <string name="incorrect_login_or_password">Incorrect login or password</string>
 </resources>
