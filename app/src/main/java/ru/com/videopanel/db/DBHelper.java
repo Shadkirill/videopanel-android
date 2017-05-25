@@ -13,6 +13,7 @@ import ru.com.videopanel.db.dbutil.RealmResultsObservable;
 import ru.com.videopanel.models.AllowedDate;
 import ru.com.videopanel.models.Item;
 import ru.com.videopanel.models.Playlist;
+import ru.com.videopanel.models.PlaylistInfo;
 
 public class DBHelper {
 
@@ -56,6 +57,16 @@ public class DBHelper {
                 .from(realm.where(PlaylistDAO.class).findAll());
     }
 
+    public static Observable<PlaylistDAO> getNotCachedPlaylist() {
+        Realm realm = getRealm();
+        return RealmResultsObservable.from(
+                realm.
+                        where(PlaylistDAO.class).
+                        equalTo(PlaylistDAO.COL_CACHE_STATUS, PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS).
+                        findAll()
+        );
+    }
+
     /**
      * Get
      *
@@ -70,5 +81,22 @@ public class DBHelper {
         realm.beginTransaction();
         realm.deleteAll();
         realm.commitTransaction();
+    }
+
+    public static void updatePlaylist(PlaylistDAO playlistDAO) {
+        Realm realm = getRealm();
+        realm.beginTransaction();
+        realm.copyToRealmOrUpdate(playlistDAO);
+        realm.commitTransaction();
+    }
+
+    public static boolean isUpdateNeed(PlaylistInfo playlistInfo) {
+        Realm realm = getRealm();
+        PlaylistDAO first = realm.
+                where(PlaylistDAO.class)
+                .equalTo(PlaylistDAO.COL_ID, playlistInfo.getId())
+                .findFirst();
+
+        return !playlistInfo.getLastUpdated().equals(first.getLastUpdated());
     }
 }
