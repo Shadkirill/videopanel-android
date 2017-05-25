@@ -10,7 +10,8 @@ android {
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
-        versionName "1.0"
+        versionName "0.1"
+				setProperty("archivesBaseName", "videopanel-$versionName")
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
