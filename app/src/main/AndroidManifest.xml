@@ -17,6 +17,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".activities.StartActivity"
+            android:noHistory="true"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

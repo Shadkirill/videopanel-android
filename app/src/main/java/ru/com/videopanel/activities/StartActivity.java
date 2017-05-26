@@ -10,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import java.util.concurrent.TimeUnit;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
@@ -21,15 +23,19 @@ import ru.com.videopanel.update.UpdateService;
 import ru.com.videopanel.utisl.PreferenceUtil;
 
 public class StartActivity extends AppCompatActivity {
+    int startDelay;
+    Observable<Long> longObservable = Observable.timer(startDelay, TimeUnit.SECONDS).doOnNext((next) -> {
+        Intent intent = new Intent(this, ShowActivity.class);
+        finish();
+        startActivity(intent);
+    });
     private String token;
     private View login_layout;
     private View start_layout;
     private EditText loginEdit;
     private EditText passwordEdit;
     private Button startPanel;
-
     private PreferenceUtil preferenceUtil;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +49,10 @@ public class StartActivity extends AppCompatActivity {
         passwordEdit = (EditText) findViewById(R.id.password_edit);
 
         if (preferenceUtil.isLogin()) {
+            startDelay = 0;
             showStart();
         } else {
+            startDelay = 3;
             showLogin();
         }
     }
@@ -92,10 +100,10 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void showStart() {
-        login_layout.setVisibility(View.GONE);
-        start_layout.setVisibility(View.VISIBLE);
-
+//        login_layout.setVisibility(View.GONE);
+//        start_layout.setVisibility(View.VISIBLE);
         startUpdateService();
+        onStartPanel(null);
     }
 
     private void showLogin() {
@@ -145,7 +153,6 @@ public class StartActivity extends AppCompatActivity {
         }
     }
 
-
     public void onLogoutClick(View view) {
         VideoService service = ServiceGenerator.createService(VideoService.class);
         service.logout(token)
@@ -167,6 +174,7 @@ public class StartActivity extends AppCompatActivity {
 
     public void onStartPanel(View view) {
         Intent intent = new Intent(this, ShowActivity.class);
+        finish();
         startActivity(intent);
     }
 }
