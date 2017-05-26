@@ -17,7 +17,9 @@ import android.widget.VideoView;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import ru.com.videopanel.R;
 import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.db.dao.ItemDAO;
@@ -86,9 +88,7 @@ public class ShowActivity extends AppCompatActivity {
                         error -> Log.d("LOG", "ERROR", error)
                 );
 
-//        getPlaylist();
-
-        planPlaylists();
+        getPlaylist();
     }
 
     @Override
@@ -97,13 +97,16 @@ public class ShowActivity extends AppCompatActivity {
         subscribe.dispose();
     }
 
-    private void planPlaylists() {
-
+    @Override
+    protected void onResume() {
+        super.onResume();
 
     }
 
     private void getPlaylist() {
         DBHelper.getAllPlaylist()
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
                 .firstElement()
                 .subscribe(
                         playlist -> {
@@ -113,13 +116,14 @@ public class ShowActivity extends AppCompatActivity {
                         },
                         error -> Log.d("LOG", "ERROR", error),
                         () -> {
+                            Log.d("LOG", "COMPLETE");
                         }
                 );
     }
 
     private void showNextContent() {
         currentPlayItem++;
-        if (currentPlayItem < currentPlaylist.getItems().size()) {
+        if (currentPlayItem != -1 && currentPlayItem < currentPlaylist.getItems().size()) {
             ItemDAO nextContent = currentPlaylist.getItems().get(currentPlayItem);
             if (nextContent.getItemType().equals(ItemDAO.TYPE_VIDEO)) {
                 goneView(imageView);
@@ -131,6 +135,7 @@ public class ShowActivity extends AppCompatActivity {
                 } catch (Exception e) {
                     Log.e("Error", e.getMessage());
                     e.printStackTrace();
+                    showNextContent();
                 }
 
                 videoView.requestFocus();
@@ -143,21 +148,21 @@ public class ShowActivity extends AppCompatActivity {
                 });
             } else if (nextContent.getItemType().equals(ItemDAO.TYPE_IMAGE)) {
 
-                videoView.setVisibility(View.GONE);
-                imageView.setVisibility(View.VISIBLE);
+                goneView(videoView);
+                visibleView(imageView);
                 ImageViewAnimatedChange(this, imageView, nextContent.getUrl());
                 Handler handler = new Handler();
                 handler.postDelayed(() -> {
                     setResult(RESULT_OK);
                     showNextContent();
-                    //TODO nextContent.getDuration()
-                }, 3 * 1000);
+                }, nextContent.getDuration() * 1000);
             }
 
         } else {
             currentPlayItem = -1;
             //TODO send logs
-            finish();
+            //TODO if we have time shownext if not get play
+            getPlaylist();
         }
     }
 
@@ -185,5 +190,12 @@ public class ShowActivity extends AppCompatActivity {
                         view.setVisibility(View.VISIBLE);
                     }
                 });
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        videoView.suspend();
+        subscribe.dispose();
     }
 }

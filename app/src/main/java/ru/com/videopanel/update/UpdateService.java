@@ -24,7 +24,7 @@ import ru.com.videopanel.utisl.PreferenceUtil;
 public class UpdateService extends Service {
     Disposable timerSubscribe;
     FileSystem fileSystem;
-    PreferenceUtil preferenceUtil = new PreferenceUtil(this);
+    PreferenceUtil preferenceUtil;
     String tempToken;
 
     public UpdateService() {
@@ -33,30 +33,44 @@ public class UpdateService extends Service {
     @Override
     public void onCreate() {
         fileSystem = new FileSystem();
+        preferenceUtil = new PreferenceUtil(getApplicationContext());
         VideoService service = ServiceGenerator.createService(VideoService.class);
 //TODO NEW?
 //TODO UPDATED?
 //TODO Check WHAT ITEMS UPDATED?
-        timerSubscribe = Observable.interval(1, TimeUnit.MINUTES)
+        timerSubscribe = Observable.interval(0, 30, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .flatMap((number) -> service.login(preferenceUtil.getLogin(), preferenceUtil.getPassword()).subscribeOn(Schedulers.io()))
-                .flatMap(token -> {
-                    tempToken = token.getToken();
-                    return service.playlists(tempToken);
-                })
-                .flatMap(Observable::fromIterable)
-                .filter(DBHelper::isUpdateNeed)
-                .flatMap(playlistInfo -> service.playlistData(playlistInfo.getId(), tempToken))
-
-                .doOnEach((playlist) -> Log.d("SERVICETICK", playlist.toString()))
-                .doOnError(error -> Log.d("LOG", "ERROR", error))
-                .doOnComplete(() -> {
-                    tryToLoadFiles();
-                    //TODO LOGOUT;
-                    tempToken = null;
-                })
+                .doOnNext(aLong ->
+                        service.login(preferenceUtil.getLogin(), preferenceUtil.getPassword())
+                                .subscribeOn(Schedulers.io())
+                                .observeOn(AndroidSchedulers.mainThread())
+                                .flatMap(token -> {
+                                    tempToken = token.getToken();
+                                    return service.playlists(tempToken).subscribeOn(Schedulers.io());
+                                })
+                                .flatMap(Observable::fromIterable)
+                                .filter(DBHelper::isUpdateNeed)
+                                .flatMap(playlistInfo -> service.playlistData(playlistInfo.getId(), tempToken).subscribeOn(Schedulers.io()))
+                                .map(playlist -> {
+                                    DBHelper.addPlaylist(playlist);
+                                    return playlist;
+                                })
+                                .doOnEach((playlist) -> {
+                                    Log.d("SERVICETICK", playlist.toString());
+                                })
+                                .doOnError(error -> Log.d("LOG", "ERROR", error))
+                                .doOnComplete(() ->
+                                        {
+                                            tryToLoadFiles();
+                                            //TODO LOGOUT;
+                                            tempToken = null;
+                                        }
+                                )
+                                .subscribe()
+                )
                 .subscribe();
+
     }
 
     private void tryToLoadFiles() {

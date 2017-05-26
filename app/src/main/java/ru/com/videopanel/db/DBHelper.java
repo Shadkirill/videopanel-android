@@ -21,8 +21,13 @@ public class DBHelper {
         Realm realm = Realm.getDefaultInstance();
 
         realm.beginTransaction();
-        PlaylistDAO playlistDAO = realm.createObject(PlaylistDAO.class, String.valueOf(playlist.getId()));
+        PlaylistDAO playlistDAO = null;
+        playlistDAO = realm.where(PlaylistDAO.class).equalTo(PlaylistDAO.COL_ID, String.valueOf(playlist.getId())).findFirst();
+        if (playlistDAO == null) {
+            playlistDAO = realm.createObject(PlaylistDAO.class, String.valueOf(playlist.getId()));
+        }
         playlistDAO.setLastUpdated(playlist.getLastUpdated());
+        playlistDAO.setCacheStatus(PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS);
 
         for (AllowedDate allowedDate : playlist.getAllowedDates()) {
             AllowedDateDAO allowedDateDAO = realm.createObject(AllowedDateDAO.class);
@@ -38,6 +43,9 @@ public class DBHelper {
 
             playlistDAO.getDates().add(allowedDateDAO);
         }
+
+        //DELETE OLD
+        playlistDAO.getItems().deleteAllFromRealm();
 
         for (Item item : playlist.getItems()) {
             ItemDAO itemDAO = realm.createObject(ItemDAO.class);
@@ -94,9 +102,13 @@ public class DBHelper {
         Realm realm = getRealm();
         PlaylistDAO first = realm.
                 where(PlaylistDAO.class)
-                .equalTo(PlaylistDAO.COL_ID, playlistInfo.getId())
+                .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistInfo.getId()))
                 .findFirst();
-
-        return !playlistInfo.getLastUpdated().equals(first.getLastUpdated());
+        if (first == null) return true;
+        if (playlistInfo.getLastUpdated().equals(first.getLastUpdated()))
+            return true;
+        if (first.getCacheStatus() == PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS)
+            return true;
+        return false;
     }
 }

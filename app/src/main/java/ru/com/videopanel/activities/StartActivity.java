@@ -71,7 +71,7 @@ public class StartActivity extends AppCompatActivity {
                             token = receivedToken.getToken();
                             preferenceUtil.setLoginAndPassword(login, password);
                             showStart();
-                            startUpdateService();
+
                         },
                         error -> {
                             //TODO Log error
@@ -95,6 +95,8 @@ public class StartActivity extends AppCompatActivity {
     private void showStart() {
         login_layout.setVisibility(View.GONE);
         start_layout.setVisibility(View.VISIBLE);
+
+        startUpdateService();
     }
 
     private void showLogin() {
