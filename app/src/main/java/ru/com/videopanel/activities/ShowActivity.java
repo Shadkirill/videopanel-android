@@ -14,11 +14,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.VideoView;
 
-import java.util.concurrent.TimeUnit;
-
-import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import ru.com.videopanel.R;
 import ru.com.videopanel.db.DBHelper;
@@ -30,7 +26,7 @@ public class ShowActivity extends AppCompatActivity {
     private VideoView videoView;
     private ImageView imageView;
     private int currentPlayItem = -1;
-    private Disposable subscribe;
+//    private Disposable subscribe;
 
     public static void ImageViewAnimatedChange(Context c, final ImageView v, final String new_image) {
         final Animation anim_out = AnimationUtils.loadAnimation(c, android.R.anim.fade_out);
@@ -81,12 +77,12 @@ public class ShowActivity extends AppCompatActivity {
         imageView = (ImageView) findViewById(R.id.imageView);
 
 
-        subscribe = Observable.interval(1, TimeUnit.SECONDS)
-                .subscribe((playlist) -> {
-                            Log.d("AAA", playlist.toString());
-                        },
-                        error -> Log.d("LOG", "ERROR", error)
-                );
+//        subscribe = Observable.interval(1, TimeUnit.SECONDS)
+//                .subscribe((playlist) -> {
+//                            Log.d("AAA", playlist.toString());
+//                        },
+//                        error -> Log.d("LOG", "ERROR", error)
+//                );
 
         getPlaylist();
     }
@@ -94,7 +90,7 @@ public class ShowActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        subscribe.dispose();
+//        subscribe.dispose();
     }
 
     @Override
@@ -144,6 +140,7 @@ public class ShowActivity extends AppCompatActivity {
                 });
 
                 videoView.setOnCompletionListener(mp -> {
+                    videoView.suspend();
                     showNextContent();
                 });
             } else if (nextContent.getItemType().equals(ItemDAO.TYPE_IMAGE)) {
@@ -196,6 +193,5 @@ public class ShowActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         videoView.suspend();
-        subscribe.dispose();
     }
 }

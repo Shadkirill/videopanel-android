@@ -105,7 +105,7 @@ public class DBHelper {
                 .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistInfo.getId()))
                 .findFirst();
         if (first == null) return true;
-        if (playlistInfo.getLastUpdated().equals(first.getLastUpdated()))
+        if (!playlistInfo.getLastUpdated().equals(first.getLastUpdated()))
             return true;
         if (first.getCacheStatus() == PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS)
             return true;

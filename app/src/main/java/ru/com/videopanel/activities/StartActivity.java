@@ -71,7 +71,6 @@ public class StartActivity extends AppCompatActivity {
                             token = receivedToken.getToken();
                             preferenceUtil.setLoginAndPassword(login, password);
                             showStart();
-
                         },
                         error -> {
                             //TODO Log error
