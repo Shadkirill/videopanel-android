@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import io.reactivex.Observable;
 import io.realm.Realm;
+import io.realm.RealmResults;
 import ru.com.videopanel.db.dao.AllowedDateDAO;
 import ru.com.videopanel.db.dao.ItemDAO;
 import ru.com.videopanel.db.dao.PlaylistDAO;
@@ -23,10 +24,14 @@ public class DBHelper {
 
         realm.beginTransaction();
         PlaylistDAO playlistDAO = null;
-        playlistDAO = realm.where(PlaylistDAO.class).equalTo(PlaylistDAO.COL_ID, String.valueOf(playlist.getId())).findFirst();
-        if (playlistDAO == null) {
-            playlistDAO = realm.createObject(PlaylistDAO.class, String.valueOf(playlist.getId()));
+        RealmResults<PlaylistDAO> playlistDAOold = null;
+
+        playlistDAOold = realm.where(PlaylistDAO.class).equalTo(PlaylistDAO.COL_ID, String.valueOf(playlist.getId())).findAll();
+        if (playlistDAOold != null) {
+            playlistDAOold.deleteAllFromRealm();
         }
+        playlistDAO = realm.createObject(PlaylistDAO.class, String.valueOf(playlist.getId()));
+
         playlistDAO.setLastUpdated(playlist.getLastUpdated());
         playlistDAO.setCacheStatus(PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS);
 
@@ -58,7 +63,7 @@ public class DBHelper {
             itemDAO.setUrl(item.getUrl());
             playlistDAO.getItems().add(itemDAO);
         }
-
+        realm.copyToRealmOrUpdate(playlistDAO);
         realm.commitTransaction();
     }
 
@@ -122,7 +127,8 @@ public class DBHelper {
                 where(PlaylistDAO.class)
                 .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistInfo.getId()))
                 .findFirst();
-        if (first == null) return true;
+        if (first == null)
+            return true;
         if (!playlistInfo.getLastUpdated().equals(first.getLastUpdated()))
             return true;
         if (first.getCacheStatus() == PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS)
