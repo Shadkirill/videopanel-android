@@ -30,6 +30,8 @@ public class DBHelper {
         playlistDAO.setLastUpdated(playlist.getLastUpdated());
         playlistDAO.setCacheStatus(PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS);
 
+        playlistDAO.getDates().deleteAllFromRealm();
+
         for (AllowedDate allowedDate : playlist.getAllowedDates()) {
             AllowedDateDAO allowedDateDAO = realm.createObject(AllowedDateDAO.class);
             SimpleDateFormat format = new SimpleDateFormat(
