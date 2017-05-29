@@ -140,9 +140,9 @@ public class StartActivity extends AppCompatActivity {
                     .doOnComplete(() -> {
                         service.logout(token).subscribeOn(Schedulers.io()).subscribe(
                                 (playlist) -> {
-                                    Log.d("LOG", String.valueOf(playlist.code()));
+                                    Log.d("LOGOUT", String.valueOf(playlist.code()));
                                 },
-                                error -> Log.d("LOG", "ERROR", error),
+                                error -> Log.d("LOGOUT", "ERROR", error),
                                 () -> {
                                 }
                         );

@@ -62,6 +62,14 @@ public class UpdateService extends Service {
                                 .doOnError(error -> Log.d("LOG", "ERROR", error))
                                 .doOnComplete(() ->
                                         {
+                                            service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
+                                                    (playlist) -> {
+                                                        Log.d("LOGOUT", String.valueOf(playlist.code()));
+                                                    },
+                                                    error -> Log.d("LOGOUT", "ERROR", error),
+                                                    () -> {
+                                                    }
+                                            );
                                             tryToLoadFiles();
                                             //TODO LOGOUT;
                                             tempToken = null;
