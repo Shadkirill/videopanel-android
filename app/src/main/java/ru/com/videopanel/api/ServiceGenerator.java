@@ -7,6 +7,8 @@ import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
+import ru.com.videopanel.App;
+import ru.com.videopanel.utisl.PreferenceUtil;
 
 /**
  * Retrofit service generator
@@ -21,20 +23,20 @@ public class ServiceGenerator {
      * Custom http client for retrofit
      */
     private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-
-    /**
-     * Retrofit service builder
-     */
-    private static Retrofit.Builder builder =
-            new Retrofit.Builder()
-                    .baseUrl(API_BASE_URL)
-                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
-                    .addConverterFactory(GsonConverterFactory.create());
-
-    /**
-     * Retrofit service
-     */
-    private static Retrofit retrofit = builder.build();
+//
+//    /**
+//     * Retrofit service builder
+//     */
+//    private static Retrofit.Builder builder =
+//            new Retrofit.Builder()
+//                    .baseUrl(new PreferenceUtil(App.getAppContext()).getUrl())
+//                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//                    .addConverterFactory(GsonConverterFactory.create());
+//
+//    /**
+//     * Retrofit service
+//     */
+//    private static Retrofit retrofit = builder.build();
 
     /**
      * Create typed retrofit service
@@ -64,6 +66,13 @@ public class ServiceGenerator {
         return createService(serviceClass, null);
     }
 
+//    public static void chengeURL(String s){
+//        builder = new Retrofit.Builder()
+//                .baseUrl(new PreferenceUtil(App.getAppContext()).getUrl())
+//                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+//                .addConverterFactory(GsonConverterFactory.create());
+//    }
+
     /**
      * Create typed retrofit service with basic authentication
      * @param serviceClass Retrofit interface .class
@@ -72,17 +81,27 @@ public class ServiceGenerator {
      */
     private static <S> S createService(
             Class<S> serviceClass, final String authToken) {
-        if (!TextUtils.isEmpty(authToken)) {
-            AuthenticationInterceptor interceptor =
-                    new AuthenticationInterceptor(authToken);
 
-            if (!httpClient.interceptors().contains(interceptor)) {
-                httpClient.addInterceptor(interceptor);
+//        if (!TextUtils.isEmpty(authToken)) {
+//            AuthenticationInterceptor interceptor =
+//                    new AuthenticationInterceptor(authToken);
+//
+//            if (!httpClient.interceptors().contains(interceptor)) {
+//                httpClient.addInterceptor(interceptor);
+//
+//
+//                builder.client(httpClient.build());
+//
+//                retrofit = builder.build();
+//            }
+//        }
 
-                builder.client(httpClient.build());
-                retrofit = builder.build();
-            }
-        }
+        Retrofit.Builder builder =
+                new Retrofit.Builder()
+                        .baseUrl(new PreferenceUtil(App.getAppContext()).getUrl())
+                        .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                        .addConverterFactory(GsonConverterFactory.create());
+        Retrofit retrofit = builder.build();
 
         return retrofit.create(serviceClass);
     }

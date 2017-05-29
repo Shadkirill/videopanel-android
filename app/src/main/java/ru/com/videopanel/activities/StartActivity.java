@@ -34,6 +34,7 @@ public class StartActivity extends AppCompatActivity {
     private View start_layout;
     private EditText loginEdit;
     private EditText passwordEdit;
+    private EditText urlEdit;
     private Button startPanel;
     private PreferenceUtil preferenceUtil;
 
@@ -47,6 +48,9 @@ public class StartActivity extends AppCompatActivity {
 
         loginEdit = (EditText) findViewById(R.id.login_edit);
         passwordEdit = (EditText) findViewById(R.id.password_edit);
+        urlEdit = (EditText) findViewById(R.id.urlText);
+
+        urlEdit.setText(preferenceUtil.getUrl());
 
         if (preferenceUtil.isLogin()) {
             startDelay = 0;
@@ -58,6 +62,9 @@ public class StartActivity extends AppCompatActivity {
     }
 
     public void onLoginClick(View view) {
+
+        preferenceUtil.setURL(urlEdit.getText().toString());
+
         String login = loginEdit.getText().toString();
         if (TextUtils.isEmpty(login)) {
             showErrorAlert(R.string.login_missed);
@@ -83,7 +90,7 @@ public class StartActivity extends AppCompatActivity {
                         error -> {
                             //TODO Log error
                             Log.d("LOG", "ERROR", error);
-                            showErrorAlert(R.string.incorrect_login_or_password);
+                            showErrorAlert(R.string.incorrect_data);
                         },
                         () -> {
                         }

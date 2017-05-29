@@ -11,12 +11,25 @@ public class PreferenceUtil {
     private static final String LOGIN = "login";
     private static final String PASSWORD = "password";
     private static final String IS_DATA_LOADED = "is_data_loaded";
+    private static final String URL = "url";
+    private static final String API_MOCK_URL = "http://videopanel.getsandbox.com/";
+
 
 
     private SharedPreferences prefs = null;
 
     public PreferenceUtil(Context context) {
         prefs = context.getSharedPreferences(PREFERENCE_NAME, MODE_PRIVATE);
+    }
+
+    public String getUrl() {
+        return prefs.getString(URL, API_MOCK_URL);
+    }
+
+    public void setURL(String url) {
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putString(URL, url);
+        edit.apply();
     }
 
     public boolean isLogin() {

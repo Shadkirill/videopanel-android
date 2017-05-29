@@ -10,4 +10,5 @@
     <string name="ok">OK</string>
     <string name="password_missed">Password missed</string>
     <string name="incorrect_login_or_password">Incorrect login or password</string>
+    <string name="incorrect_data">Incorrect data</string>
 </resources>
