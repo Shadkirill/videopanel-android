@@ -16,6 +16,7 @@ import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
 import ru.com.videopanel.R;
+import ru.com.videopanel.api.NetworkUtil;
 import ru.com.videopanel.api.ServiceGenerator;
 import ru.com.videopanel.api.VideoService;
 import ru.com.videopanel.db.DBHelper;
@@ -31,7 +32,7 @@ public class StartActivity extends AppCompatActivity {
     });
     private String token;
     private View login_layout;
-    private View start_layout;
+    //    private View start_layout;
     private EditText loginEdit;
     private EditText passwordEdit;
     private EditText urlEdit;
@@ -43,7 +44,7 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
         login_layout = findViewById(R.id.login_layout);
-        start_layout = findViewById(R.id.start_layout);
+//        start_layout = findViewById(R.id.start_layout);
         preferenceUtil = new PreferenceUtil(this);
 
         loginEdit = (EditText) findViewById(R.id.login_edit);
@@ -77,24 +78,29 @@ public class StartActivity extends AppCompatActivity {
             return;
         }
 
-        VideoService service = ServiceGenerator.createService(VideoService.class);
-        service.login(login, password)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        (receivedToken) -> {
-                            token = receivedToken.getToken();
-                            preferenceUtil.setLoginAndPassword(login, password);
-                            showStart();
-                        },
-                        error -> {
-                            //TODO Log error
-                            Log.d("LOG", "ERROR", error);
-                            showErrorAlert(R.string.incorrect_data);
-                        },
-                        () -> {
-                        }
-                );
+        if (NetworkUtil.isOnline(this)) {
+            VideoService service = ServiceGenerator.createService(VideoService.class);
+            service.login(login, password)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(
+                            (receivedToken) -> {
+                                token = receivedToken.getToken();
+                                preferenceUtil.setLoginAndPassword(login, password);
+                                showStart();
+                            },
+                            error -> {
+                                //TODO Log error
+                                Log.d("LOG", "ERROR", error);
+                                showErrorAlert(R.string.incorrect_data);
+                            },
+                            () -> {
+                            }
+                    );
+        } else {
+            showErrorAlert(R.string.no_internet_connection);
+            Log.e("STARTACTIVITY", "No internet connection");
+        }
     }
 
     private void showErrorAlert(int errorMessageStringResource) {
@@ -115,7 +121,7 @@ public class StartActivity extends AppCompatActivity {
 
     private void showLogin() {
         login_layout.setVisibility(View.VISIBLE);
-        start_layout.setVisibility(View.GONE);
+//        start_layout.setVisibility(View.GONE);
     }
 
     private void startUpdateService() {
@@ -160,24 +166,24 @@ public class StartActivity extends AppCompatActivity {
         }
     }
 
-    public void onLogoutClick(View view) {
-        VideoService service = ServiceGenerator.createService(VideoService.class);
-        service.logout(token)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        (response) -> {
-                            Log.d("LOG", String.valueOf(response.code()));
-                            preferenceUtil.removeLoginAndPassword();
-                            showLogin();
-                        },
-                        error -> Log.d("LOG", "ERROR", error),
-                        () -> {
-                            preferenceUtil.removeLoginAndPassword();
-                            showLogin();
-                        }
-                );
-    }
+//    public void onLogoutClick(View view) {
+//        VideoService service = ServiceGenerator.createService(VideoService.class);
+//        service.logout(token)
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(
+//                        (response) -> {
+//                            Log.d("LOG", String.valueOf(response.code()));
+//                            preferenceUtil.removeLoginAndPassword();
+//                            showLogin();
+//                        },
+//                        error -> Log.d("LOG", "ERROR", error),
+//                        () -> {
+//                            preferenceUtil.removeLoginAndPassword();
+//                            showLogin();
+//                        }
+//                );
+//    }
 
     public void onStartPanel(View view) {
         Intent intent = new Intent(this, ShowActivity.class);
