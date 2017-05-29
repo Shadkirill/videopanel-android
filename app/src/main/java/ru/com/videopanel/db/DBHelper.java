@@ -2,6 +2,7 @@ package ru.com.videopanel.db;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 
 import io.reactivex.Observable;
@@ -35,7 +36,7 @@ public class DBHelper {
                     "yyyy-MM-dd'T'HH:mm:ssZ", Locale.US);//2017-01-01T13:00:00+03:00
             try {
                 allowedDateDAO.setStart(format.parse(allowedDate.getStart()));
-                allowedDateDAO.setEnd(format.parse(allowedDate.getStart()));
+                allowedDateDAO.setEnd(format.parse(allowedDate.getEnd()));
             } catch (ParseException e) {
                 e.printStackTrace();
                 //TODO send error to server
@@ -63,6 +64,21 @@ public class DBHelper {
         Realm realm = getRealm();
         return RealmResultsObservable
                 .from(realm.where(PlaylistDAO.class).findAll());
+    }
+
+    public static Observable<PlaylistDAO> getCurrentPlaylist() {
+        Date currentDate = new Date();
+
+        PlaylistDAO playlistDAO = new PlaylistDAO();
+        playlistDAO.setItems(null);
+
+        Realm realm = getRealm();
+        return RealmResultsObservable
+                .from(realm.where(PlaylistDAO.class)
+                        .lessThanOrEqualTo(PlaylistDAO.COL_DATES + "." + AllowedDateDAO.COL_START, currentDate)
+                        .greaterThan(PlaylistDAO.COL_DATES + "." + AllowedDateDAO.COL_END, currentDate)
+                        .findAll())
+                .switchIfEmpty(Observable.just(playlistDAO));
     }
 
     public static Observable<PlaylistDAO> getNotCachedPlaylist() {

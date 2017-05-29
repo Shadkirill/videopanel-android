@@ -110,13 +110,12 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     private void getPlaylist() {
-        DBHelper.getAllPlaylist()
+        DBHelper.getCurrentPlaylist()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeOn(Schedulers.io())
                 .firstElement()
                 .subscribe(
                         playlist -> {
-                            Log.d("LOG", playlist.getLastUpdated());
                             currentPlaylist = playlist;
                             showNextContent();
                         },
@@ -134,6 +133,12 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     private void showNextContent() {
+        if (currentPlaylist.getItems() == null) {
+            showNothing();
+            Handler handler = new Handler();
+            handler.postDelayed(this::getPlaylist, 15 * 1000);
+            return;
+        }
 
         currentPlayItem++;
         if (currentPlayItem != -1 && currentPlayItem < currentPlaylist.getItems().size()) {
@@ -178,6 +183,11 @@ public class ShowActivity extends AppCompatActivity {
             //TODO if we have time shownext if not get play
             getPlaylist();
         }
+    }
+
+    private void showNothing() {
+        goneView(imageView);
+        goneView(videoView);
     }
 
     public void goneView(View view) {
