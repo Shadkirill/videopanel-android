@@ -1,8 +1,11 @@
-package ru.com.videopanel.utisl;
+package ru.com.videopanel.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.text.TextUtils;
+
+import ru.com.videopanel.App;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -13,8 +16,9 @@ public class PreferenceUtil {
     private static final String IS_DATA_LOADED = "is_data_loaded";
     private static final String URL = "url";
     private static final String API_MOCK_URL = "http://videopanel.getsandbox.com/";
-
-
+    private static final String API_DEFAULT_URL = "https://videopanel.herokuapp.com/api/";
+    private static boolean isDebug = (0 != (App.getAppContext().getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE));
+    private static final String API_URL = isDebug ? API_MOCK_URL : API_DEFAULT_URL;
 
     private SharedPreferences prefs = null;
 
@@ -23,7 +27,7 @@ public class PreferenceUtil {
     }
 
     public String getUrl() {
-        return prefs.getString(URL, API_MOCK_URL);
+        return prefs.getString(URL, API_URL);
     }
 
     public void setURL(String url) {

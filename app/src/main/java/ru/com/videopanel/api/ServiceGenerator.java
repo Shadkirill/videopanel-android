@@ -8,7 +8,7 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 import ru.com.videopanel.App;
-import ru.com.videopanel.utisl.PreferenceUtil;
+import ru.com.videopanel.utils.PreferenceUtil;
 
 /**
  * Retrofit service generator

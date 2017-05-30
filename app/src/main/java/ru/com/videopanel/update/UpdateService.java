@@ -20,7 +20,7 @@ import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.db.dao.ItemDAO;
 import ru.com.videopanel.db.dao.PlaylistDAO;
 import ru.com.videopanel.files.FileSystem;
-import ru.com.videopanel.utisl.PreferenceUtil;
+import ru.com.videopanel.utils.PreferenceUtil;
 
 public class UpdateService extends Service {
     Disposable timerSubscribe;

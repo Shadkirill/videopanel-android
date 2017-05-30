@@ -1,6 +1,10 @@
 package ru.com.videopanel.activities;
 
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +13,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,7 +26,7 @@ import ru.com.videopanel.api.ServiceGenerator;
 import ru.com.videopanel.api.VideoService;
 import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.update.UpdateService;
-import ru.com.videopanel.utisl.PreferenceUtil;
+import ru.com.videopanel.utils.PreferenceUtil;
 
 public class StartActivity extends AppCompatActivity {
     int startDelay;
@@ -39,12 +44,31 @@ public class StartActivity extends AppCompatActivity {
     private Button startPanel;
     private PreferenceUtil preferenceUtil;
 
+    private ProgressDialog dialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_start);
+        getSupportActionBar().hide();
+
+        dialog = new ProgressDialog(this);
+        dialog.setMessage("Идет проверка данных");
+        dialog.setCancelable(false);
+
+        TextView versionText = (TextView) findViewById(R.id.version_text);
+        try {
+            PackageInfo pInfo = getPackageManager().getPackageInfo(getPackageName(), 0);
+            String version = pInfo.versionName;
+
+            int verCode = pInfo.versionCode;
+            versionText.setText("Клиент VideoPanel, версия " + version + " (#" + String.valueOf(verCode) + ")");
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
         login_layout = findViewById(R.id.login_layout);
-//        start_layout = findViewById(R.id.start_layout);
         preferenceUtil = new PreferenceUtil(this);
 
         loginEdit = (EditText) findViewById(R.id.login_edit);
@@ -79,6 +103,7 @@ public class StartActivity extends AppCompatActivity {
         }
 
         if (NetworkUtil.isOnline(this)) {
+            dialog.show();
             VideoService service = ServiceGenerator.createService(VideoService.class);
             service.login(login, password)
                     .subscribeOn(Schedulers.io())
@@ -87,18 +112,20 @@ public class StartActivity extends AppCompatActivity {
                             (receivedToken) -> {
                                 token = receivedToken.getToken();
                                 preferenceUtil.setLoginAndPassword(login, password);
+                                dialog.dismiss();
                                 showStart();
                             },
                             error -> {
                                 //TODO Log error
+                                dialog.dismiss();
                                 Log.d("LOG", "ERROR", error);
-                                showErrorAlert(R.string.incorrect_data);
+                                showAlternativeErrorAlert(R.string.incorrect_data);
                             },
                             () -> {
                             }
                     );
         } else {
-            showErrorAlert(R.string.no_internet_connection);
+            showAlternativeErrorAlert(R.string.no_internet_connection);
             Log.e("STARTACTIVITY", "No internet connection");
         }
     }
@@ -108,6 +135,28 @@ public class StartActivity extends AppCompatActivity {
         builder.setMessage(errorMessageStringResource)
                 .setTitle(R.string.error)
                 .setPositiveButton(R.string.ok, null);
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void showAlternativeErrorAlert(int errorMessageStringResource) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage(errorMessageStringResource)
+                .setTitle(R.string.error)
+                .setPositiveButton("Изменить данные", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+
+                    }
+                })
+                .setNegativeButton("Сохранить все равно", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        preferenceUtil.setLoginAndPassword(loginEdit.getText().toString(), passwordEdit.getText().toString());
+                        showStart();
+
+                    }
+                });
         AlertDialog dialog = builder.create();
         dialog.show();
     }
@@ -125,9 +174,8 @@ public class StartActivity extends AppCompatActivity {
     }
 
     private void startUpdateService() {
-//        Toast.makeText(this, "Загрузка плейлистов началась. Это может занять время", Toast.LENGTH_LONG).show();
 
-        if (preferenceUtil.isDataLoaded()) {
+        if (preferenceUtil.isDataLoaded() || token == null) {
             startService(new Intent(this, UpdateService.class));
         } else {
             VideoService service = ServiceGenerator.createService(VideoService.class);

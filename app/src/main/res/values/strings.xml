@@ -1,15 +1,15 @@
 <resources>
     <string name="app_name">VideoPanel</string>
-    <string name="login">Login</string>
+    <string name="login">Логин</string>
     <string name="password">Password</string>
-    <string name="login_button_text">Login</string>
+    <string name="login_button_text">Войти</string>
     <string name="start_panel_button_text">Start panel</string>
     <string name="logout_button_text">Logout</string>
-    <string name="error">Error</string>
+    <string name="error">Ошибка</string>
     <string name="login_missed">Login missed</string>
     <string name="ok">OK</string>
     <string name="password_missed">Password missed</string>
     <string name="incorrect_login_or_password">Incorrect login or password</string>
-    <string name="incorrect_data">Incorrect data</string>
-    <string name="no_internet_connection">No internet connection</string>
+    <string name="incorrect_data">Возникла ошибка при проверке данных, рекомендуем еще раз проверить их на правильность</string>
+    <string name="no_internet_connection">Нет связи с сервером. Проверьте интернет подключение. Выможете сохранить данные логина офлайн</string>
 </resources>
