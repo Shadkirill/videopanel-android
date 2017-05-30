@@ -100,6 +100,7 @@ public class ServiceGenerator {
                 new Retrofit.Builder()
                         .baseUrl(new PreferenceUtil(App.getAppContext()).getUrl())
                         .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+
                         .addConverterFactory(GsonConverterFactory.create());
         Retrofit retrofit = builder.build();
 

@@ -47,13 +47,20 @@ public class UpdateService extends Service {
                                 service.login(preferenceUtil.getLogin(), preferenceUtil.getPassword())
                                         .subscribeOn(Schedulers.io())
                                         .observeOn(AndroidSchedulers.mainThread())
+                                        .onErrorResumeNext(Observable.empty())
                                         .flatMap(token -> {
                                             tempToken = token.getToken();
-                                            return service.playlists(tempToken).subscribeOn(Schedulers.io());
+                                            return service.playlists(tempToken)
+                                                    .subscribeOn(Schedulers.io());
                                         })
                                         .flatMap(Observable::fromIterable)
                                         .filter(DBHelper::isUpdateNeed)
-                                        .flatMap(playlistInfo -> service.playlistData(playlistInfo.getId(), tempToken).subscribeOn(Schedulers.io()))
+                                        .flatMap(playlistInfo ->
+                                                service.playlistData(playlistInfo.getId(), tempToken)
+                                                        .doOnError(error -> {
+                                                            Log.d("LOG", "ERROR", error);
+                                                        })
+                                                        .subscribeOn(Schedulers.io()))
                                         .map(playlist -> {
                                             DBHelper.addPlaylist(playlist);
                                             return playlist;
@@ -61,7 +68,6 @@ public class UpdateService extends Service {
                                         .doOnEach((playlist) -> {
                                             Log.d("SERVICETICK", playlist.toString());
                                         })
-                                        .doOnError(error -> Log.d("LOG", "ERROR", error))
                                         .doOnComplete(() ->
                                                 {
                                                     service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
