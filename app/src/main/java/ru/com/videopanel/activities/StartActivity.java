@@ -235,4 +235,9 @@ public class StartActivity extends AppCompatActivity {
         finish();
         startActivity(intent);
     }
+
+    public void forceCrash(View view) {
+        throw new RuntimeException("This is a crash");
+    }
+
 }
