@@ -2,11 +2,14 @@ package ru.com.videopanel.db;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 import io.reactivex.Observable;
 import io.realm.Realm;
+import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import ru.com.videopanel.db.dao.AllowedDateDAO;
 import ru.com.videopanel.db.dao.ItemDAO;
@@ -134,5 +137,21 @@ public class DBHelper {
         if (first.getCacheStatus() == PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS)
             return true;
         return false;
+    }
+
+    public static void deleteOther(List<PlaylistInfo> playlistInfos) {
+        ArrayList<String> ids = new ArrayList<>();
+        for (PlaylistInfo playlist : playlistInfos) {
+            ids.add(String.valueOf(playlist.getId()));
+        }
+        Realm realm = getRealm();
+        RealmQuery<PlaylistDAO> data = realm.where(PlaylistDAO.class)
+                .not()
+                .in(PlaylistDAO.COL_ID, ids.toArray(new String[ids.size()]));
+
+        RealmResults<PlaylistDAO> all = data.findAll();
+        realm.beginTransaction();
+        all.deleteAllFromRealm();
+        realm.commitTransaction();
     }
 }

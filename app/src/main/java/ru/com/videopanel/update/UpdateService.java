@@ -6,11 +6,14 @@ import android.os.IBinder;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.RealmList;
 import ru.com.videopanel.api.NetworkUtil;
@@ -20,6 +23,7 @@ import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.db.dao.ItemDAO;
 import ru.com.videopanel.db.dao.PlaylistDAO;
 import ru.com.videopanel.files.FileSystem;
+import ru.com.videopanel.models.PlaylistInfo;
 import ru.com.videopanel.utils.PreferenceUtil;
 
 public class UpdateService extends Service {
@@ -52,6 +56,13 @@ public class UpdateService extends Service {
                                             tempToken = token.getToken();
                                             return service.playlists(tempToken)
                                                     .subscribeOn(Schedulers.io());
+                                        })
+                                        .map(new Function<List<PlaylistInfo>, List<PlaylistInfo>>() {
+                                            @Override
+                                            public List<PlaylistInfo> apply(@NonNull List<PlaylistInfo> playlistInfos) throws Exception {
+                                                DBHelper.deleteOther(playlistInfos);
+                                                return playlistInfos;
+                                            }
                                         })
                                         .flatMap(Observable::fromIterable)
                                         .filter(DBHelper::isUpdateNeed)
