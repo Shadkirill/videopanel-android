@@ -140,18 +140,26 @@ public class DBHelper {
     }
 
     public static void deleteOther(List<PlaylistInfo> playlistInfos) {
-        ArrayList<String> ids = new ArrayList<>();
-        for (PlaylistInfo playlist : playlistInfos) {
-            ids.add(String.valueOf(playlist.getId()));
-        }
         Realm realm = getRealm();
-        RealmQuery<PlaylistDAO> data = realm.where(PlaylistDAO.class)
-                .not()
-                .in(PlaylistDAO.COL_ID, ids.toArray(new String[ids.size()]));
+        if (playlistInfos.isEmpty()) {
+            realm.beginTransaction();
+            RealmResults<PlaylistDAO> all = realm.where(PlaylistDAO.class).findAll();
+            all.deleteAllFromRealm();
+            realm.commitTransaction();
+        } else {
+            ArrayList<String> ids = new ArrayList<>();
+            for (PlaylistInfo playlist : playlistInfos) {
+                ids.add(String.valueOf(playlist.getId()));
+            }
 
-        RealmResults<PlaylistDAO> all = data.findAll();
-        realm.beginTransaction();
-        all.deleteAllFromRealm();
-        realm.commitTransaction();
+            RealmQuery<PlaylistDAO> data = realm.where(PlaylistDAO.class)
+                    .not()
+                    .in(PlaylistDAO.COL_ID, ids.toArray(new String[ids.size()]));
+
+            RealmResults<PlaylistDAO> all = data.findAll();
+            realm.beginTransaction();
+            all.deleteAllFromRealm();
+            realm.commitTransaction();
+        }
     }
 }
