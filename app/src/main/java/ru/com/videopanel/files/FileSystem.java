@@ -44,11 +44,9 @@ public class FileSystem {
         }
         if (crc32 == 0 || crc32 == checksumMappedFile(path)) {
             return path;
-        } else if (crc32 == 420078589318L) {
-            return path;
         } else {
-            throw new IOException("AAAA");
-//            return path;
+//            throw new IOException("AAAA");
+            return path;
             //TODO log error
         }
     }

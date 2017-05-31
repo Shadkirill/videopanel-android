@@ -99,8 +99,16 @@ public class ShowActivity extends AppCompatActivity {
                 .firstElement()
                 .subscribe(
                         playlist -> {
-                            currentPlaylist = playlist;
-                            showNextContent();
+                            if (playlist.isCached()) {
+                                currentPlaylist = playlist;
+                                showNextContent();
+                            } else {
+                                showNothing();
+                                Handler handler = new Handler();
+                                handler.postDelayed(() -> {
+                                    getPlaylist();
+                                }, 5 * 1000);
+                            }
                         },
                         error -> Log.d("LOG", "ERROR", error),
                         () -> {

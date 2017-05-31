@@ -11,7 +11,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
@@ -37,11 +36,9 @@ public class StartActivity extends AppCompatActivity {
     });
     private String token;
     private View login_layout;
-    //    private View start_layout;
     private EditText loginEdit;
     private EditText passwordEdit;
     private EditText urlEdit;
-    private Button startPanel;
     private PreferenceUtil preferenceUtil;
 
     private ProgressDialog dialog;

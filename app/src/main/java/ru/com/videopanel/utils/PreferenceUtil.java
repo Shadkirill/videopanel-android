@@ -17,9 +17,8 @@ public class PreferenceUtil {
     private static final String URL = "url";
     private static final String API_MOCK_URL = "http://videopanel.getsandbox.com/";
     private static final String API_DEFAULT_URL = "https://videopanel.herokuapp.com/api/";
+    private static final String API_URL = API_DEFAULT_URL;//isDebug ? API_MOCK_URL : API_DEFAULT_URL;
     private static boolean isDebug = (0 != (App.getAppContext().getApplicationInfo().flags &= ApplicationInfo.FLAG_DEBUGGABLE));
-    private static final String API_URL = isDebug ? API_MOCK_URL : API_DEFAULT_URL;
-
     private SharedPreferences prefs = null;
 
     public PreferenceUtil(Context context) {
