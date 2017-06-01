@@ -10,8 +10,6 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.VideoView;
 
@@ -39,37 +37,38 @@ public class ShowActivity extends AppCompatActivity {
     private int currentPlayItem = -1;
 
     public static void ImageViewAnimatedChange(Context c, final ImageView v, final String new_image) {
-        final Animation anim_out = AnimationUtils.loadAnimation(c, android.R.anim.fade_out);
-        final Animation anim_in = AnimationUtils.loadAnimation(c, android.R.anim.fade_in);
-        anim_out.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                v.setImageURI(Uri.parse(new_image));
-                anim_in.setAnimationListener(new Animation.AnimationListener() {
-                    @Override
-                    public void onAnimationStart(Animation animation) {
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animation animation) {
-                    }
-                });
-                v.startAnimation(anim_in);
-            }
-        });
-        v.startAnimation(anim_out);
+        v.setImageURI(Uri.parse(new_image));
+//        final Animation anim_out = AnimationUtils.loadAnimation(c, android.R.anim.fade_out);
+//        final Animation anim_in = AnimationUtils.loadAnimation(c, android.R.anim.fade_in);
+//        anim_out.setAnimationListener(new Animation.AnimationListener() {
+//            @Override
+//            public void onAnimationStart(Animation animation) {
+//            }
+//
+//            @Override
+//            public void onAnimationRepeat(Animation animation) {
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animation animation) {
+//
+////                anim_in.setAnimationListener(new Animation.AnimationListener() {
+////                    @Override
+////                    public void onAnimationStart(Animation animation) {
+////                    }
+////
+////                    @Override
+////                    public void onAnimationRepeat(Animation animation) {
+////                    }
+////
+////                    @Override
+////                    public void onAnimationEnd(Animation animation) {
+////                    }
+////                });
+////                v.startAnimation(anim_in);
+//            }
+//        });
+//        v.startAnimation(anim_out);
     }
 
     @Override
@@ -164,12 +163,7 @@ public class ShowActivity extends AppCompatActivity {
                 ImageViewAnimatedChange(this, imageView, FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
 
                 playlistHandler = new Handler();
-                r = new Runnable() {
-                    @Override
-                    public void run() {
-                        showNextContent();
-                    }
-                };
+                r = () -> showNextContent();
                 playlistHandler.postDelayed(r, nextContent.getDuration() * 1000);
             }
 

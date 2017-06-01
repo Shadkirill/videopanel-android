@@ -7,14 +7,6 @@ repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
 android {
-//    signingConfigs {
-//        videopanel {
-//            keyAlias 'videopanel'
-//            keyPassword 'videopanel'
-//            storeFile file('C:/Users/dmitry/Desktop/videopanel.jks')
-//            storePassword 'videopanel'
-//        }
-//    }
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
     defaultConfig {
@@ -22,7 +14,7 @@ android {
         minSdkVersion 19
         targetSdkVersion 25
         versionCode 1
-        versionName "0.2"
+        versionName "0.3"
         setProperty("archivesBaseName", "videopanel-$versionName")
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -40,7 +32,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-//            signingConfig signingConfigs.videopanel
         }
     }
     compileOptions {

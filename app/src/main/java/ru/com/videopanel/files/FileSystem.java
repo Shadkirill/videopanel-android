@@ -18,7 +18,7 @@ public class FileSystem {
     private static final String DIRECTORY_PRODUCTION = "production";
 
     public static String getFilePath(File filedir, String playlistId, String file) {
-        return filedir.getPath() + "/" + DIRECTORY_PRODUCTION + "/" + playlistId + "/" + file;
+        return "file://" + filedir.getPath() + "/" + DIRECTORY_PRODUCTION + "/" + playlistId + "/" + file;
     }
 
     private static void copyFileOrDirectory(String srcDir, String dstDir) {

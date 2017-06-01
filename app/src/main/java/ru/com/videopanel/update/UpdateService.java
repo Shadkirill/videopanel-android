@@ -61,8 +61,12 @@ public class UpdateService extends Service {
                                             String currentPlaylistId = preferenceUtil.getCurrentPlaylistId();
                                             for (PlaylistInfo pl : playlistInfos) {
                                                 if (currentPlaylistId.equals(String.valueOf(pl.getId()))) {
-                                                    EventBus.getDefault().post(new MessageEvent("stop"));
-                                                    EventBus.getDefault().post(new MessageEvent("start"));
+                                                    if (DBHelper.isUpdateNeed(pl)) {
+                                                        EventBus.getDefault().post(new MessageEvent("stop"));
+                                                        DBHelper.deleteOther(playlistInfos);
+                                                        EventBus.getDefault().post(new MessageEvent("start"));
+                                                        return playlistInfos;
+                                                    }
                                                 }
                                             }
                                             DBHelper.deleteOther(playlistInfos);

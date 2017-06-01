@@ -35,16 +35,6 @@
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent">
 
-            <Button
-                android:id="@+id/button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerHorizontal="true"
-                android:layout_centerVertical="true"
-                android:background="@android:color/holo_red_light"
-                android:onClick="forceCrash"
-                android:text="Force Crash!" />
-
             <TextView
                 android:id="@+id/textView2"
                 android:layout_width="wrap_content"
@@ -147,6 +137,7 @@
             android:inputType="number"
             android:padding="8dp"
             android:singleLine="true"
+            android:text="2"
             android:textColorHint="#999999"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintLeft_toLeftOf="parent"
@@ -164,6 +155,7 @@
             android:inputType="textPassword"
             android:padding="8dp"
             android:singleLine="true"
+            android:text="vfrxcSGh"
             android:textColorHint="#999999"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintLeft_toLeftOf="@+id/login_edit"
@@ -200,9 +192,5 @@
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/login_button" />
-
-
     </android.support.constraint.ConstraintLayout>
-
-
 </android.support.constraint.ConstraintLayout>

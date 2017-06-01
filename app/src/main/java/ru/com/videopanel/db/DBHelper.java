@@ -28,7 +28,6 @@ public class DBHelper {
         realm.beginTransaction();
         PlaylistDAO playlistDAO;
 
-
         playlistDAO = realm.createObject(PlaylistDAO.class);
 
         playlistDAO.setId(String.valueOf(playlist.getId()));
@@ -145,6 +144,26 @@ public class DBHelper {
             realm.beginTransaction();
             all.deleteAllFromRealm();
             realm.commitTransaction();
+        }
+    }
+
+    public static RealmResults<PlaylistDAO> getOther(List<PlaylistInfo> playlistInfos) {
+        Realm realm = getRealm();
+        if (playlistInfos.isEmpty()) {
+            RealmResults<PlaylistDAO> all = realm.where(PlaylistDAO.class).findAll();
+            return all;
+        } else {
+            ArrayList<String> ids = new ArrayList<>();
+            for (PlaylistInfo playlist : playlistInfos) {
+                ids.add(String.valueOf(playlist.getId()));
+            }
+
+            RealmQuery<PlaylistDAO> data = realm.where(PlaylistDAO.class)
+                    .not()
+                    .in(PlaylistDAO.COL_ID, ids.toArray(new String[ids.size()]));
+
+            RealmResults<PlaylistDAO> all = data.findAll();
+            return all;
         }
     }
 
