@@ -46,7 +46,7 @@ public class ItemDAO extends RealmObject {
     }
 
     public String getCrc32() {
-        return crc32;
+        return (crc32 != null ? crc32 : "0");
     }
 
     public void setCrc32(String crc32) {

@@ -1,7 +1,5 @@
 package ru.com.videopanel.activities;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -17,15 +15,24 @@ import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.VideoView;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import ru.com.videopanel.MessageEvent;
 import ru.com.videopanel.R;
 import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.db.dao.ItemDAO;
 import ru.com.videopanel.db.dao.PlaylistDAO;
+import ru.com.videopanel.files.FileSystem;
 import ru.com.videopanel.update.UpdateService;
+import ru.com.videopanel.utils.PreferenceUtil;
 
 public class ShowActivity extends AppCompatActivity {
+    Handler playlistHandler;
+    Runnable r;
     private PlaylistDAO currentPlaylist;
     private VideoView videoView;
     private ImageView imageView;
@@ -87,9 +94,16 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
     protected void onStop() {
         super.onStop();
         stopService(new Intent(this, UpdateService.class));
+        EventBus.getDefault().unregister(this);
     }
 
     private void getPlaylist() {
@@ -99,38 +113,26 @@ public class ShowActivity extends AppCompatActivity {
                 .firstElement()
                 .subscribe(
                         playlist -> {
-                            if (playlist.isCached()) {
-                                currentPlaylist = playlist;
-                                showNextContent();
-                            } else {
+                            currentPlaylist = playlist;
+                            if (currentPlaylist.getId() == null) {
                                 showNothing();
                                 Handler handler = new Handler();
                                 handler.postDelayed(() -> {
                                     getPlaylist();
                                 }, 5 * 1000);
+                            } else {
+                                new PreferenceUtil(this).setCurrentPlaylistId(playlist.getId());
+                                showNextContent();
                             }
                         },
                         error -> Log.d("LOG", "ERROR", error),
                         () -> {
-                            Log.d("LOG", "COMPLETE");
-                            if (currentPlaylist == null) {
-                                Handler handler = new Handler();
-                                handler.postDelayed(() -> {
-                                    getPlaylist();
-                                }, 5 * 1000);
-                            }
+
                         }
                 );
     }
 
     private void showNextContent() {
-        if (currentPlaylist.getItems() == null) {
-            showNothing();
-            Handler handler = new Handler();
-            handler.postDelayed(this::getPlaylist, 15 * 1000);
-            return;
-        }
-
         currentPlayItem++;
         if (currentPlayItem != -1 && currentPlayItem < currentPlaylist.getItems().size()) {
             ItemDAO nextContent = currentPlaylist.getItems().get(currentPlayItem);
@@ -138,9 +140,8 @@ public class ShowActivity extends AppCompatActivity {
                 goneView(imageView);
                 visibleView(videoView);
                 try {
-                    Uri video = Uri.parse(nextContent.getUrl());
+                    Uri video = Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
                     videoView.setVideoURI(video);
-
                 } catch (Exception e) {
                     Log.e("Error", e.getMessage());
                     e.printStackTrace();
@@ -160,12 +161,16 @@ public class ShowActivity extends AppCompatActivity {
 
                 goneView(videoView);
                 visibleView(imageView);
-                ImageViewAnimatedChange(this, imageView, nextContent.getUrl());
-                Handler handler = new Handler();
-                handler.postDelayed(() -> {
-                    setResult(RESULT_OK);
-                    showNextContent();
-                }, nextContent.getDuration() * 1000);
+                ImageViewAnimatedChange(this, imageView, FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
+
+                playlistHandler = new Handler();
+                r = new Runnable() {
+                    @Override
+                    public void run() {
+                        showNextContent();
+                    }
+                };
+                playlistHandler.postDelayed(r, nextContent.getDuration() * 1000);
             }
 
         } else {
@@ -182,34 +187,59 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     public void goneView(View view) {
-        view.animate()
-                .alpha(0.0f)
-                .setDuration(500)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        view.setVisibility(View.GONE);
-                    }
-                });
+        view.setVisibility(View.GONE);
+//        view.animate()
+//                .alpha(0.0f)
+//                .setDuration(500)
+//                .setListener(new AnimatorListenerAdapter() {
+//                    @Override
+//                    public void onAnimationEnd(Animator animation) {
+//                        super.onAnimationEnd(animation);
+//                        view.setVisibility(View.GONE);
+//                    }
+//                });
     }
 
     public void visibleView(View view) {
-        view.animate()
-                .alpha(1.0f)
-                .setDuration(500)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        view.setVisibility(View.VISIBLE);
-                    }
-                });
+        view.setVisibility(View.VISIBLE);
+//        view.animate()
+//                .alpha(1.0f)
+//                .setDuration(500)
+//                .setListener(new AnimatorListenerAdapter() {
+//                    @Override
+//                    public void onAnimationEnd(Animator animation) {
+//                        super.onAnimationEnd(animation);
+//
+//                    }
+//                });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         videoView.suspend();
+    }
+
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onMessageEvent(MessageEvent event) {
+        if (event.getCommand().equals("stop")) {
+            stop();
+        } else if (event.getCommand().equals("start")) {
+            start();
+        }
+    }
+
+    private void start() {
+        getPlaylist();
+    }
+
+    private void stop() {
+        videoView.suspend();
+        if (playlistHandler != null && r != null)
+            playlistHandler.removeCallbacks(r);
+        showNothing();
+        currentPlaylist = null;
+        currentPlayItem = -1;
     }
 }

@@ -3,10 +3,8 @@ package ru.com.videopanel;
 import android.app.Application;
 import android.content.Context;
 
-import com.crashlytics.android.Crashlytics;
 import com.squareup.leakcanary.LeakCanary;
 
-import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 
 /**
@@ -34,8 +32,8 @@ public class App extends Application {
             return;
         }
         LeakCanary.install(this);
-
-        Fabric.with(this, new Crashlytics());
+//TODO turn on
+//        Fabric.with(this, new Crashlytics());
 
     }
 }

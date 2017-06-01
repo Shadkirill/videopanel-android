@@ -22,21 +22,18 @@ import ru.com.videopanel.models.PlaylistInfo;
 
 public class DBHelper {
 
-    public static void addPlaylist(Playlist playlist) {
+    public static PlaylistDAO addPlaylist(Playlist playlist) {
         Realm realm = Realm.getDefaultInstance();
 
         realm.beginTransaction();
-        PlaylistDAO playlistDAO = null;
-        RealmResults<PlaylistDAO> playlistDAOold = null;
+        PlaylistDAO playlistDAO;
 
-        playlistDAOold = realm.where(PlaylistDAO.class).equalTo(PlaylistDAO.COL_ID, String.valueOf(playlist.getId())).findAll();
-        if (playlistDAOold != null) {
-            playlistDAOold.deleteAllFromRealm();
-        }
-        playlistDAO = realm.createObject(PlaylistDAO.class, String.valueOf(playlist.getId()));
 
+        playlistDAO = realm.createObject(PlaylistDAO.class);
+
+        playlistDAO.setId(String.valueOf(playlist.getId()));
         playlistDAO.setLastUpdated(playlist.getLastUpdated());
-        playlistDAO.setCacheStatus(PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS);
+        playlistDAO.setDownloading(true);
 
         playlistDAO.getDates().deleteAllFromRealm();
 
@@ -66,8 +63,9 @@ public class DBHelper {
             itemDAO.setUrl(item.getUrl());
             playlistDAO.getItems().add(itemDAO);
         }
-        realm.copyToRealmOrUpdate(playlistDAO);
+        realm.copyToRealm(playlistDAO);
         realm.commitTransaction();
+        return realm.copyFromRealm(playlistDAO);
     }
 
     public static Observable<PlaylistDAO> getAllPlaylist() {
@@ -87,18 +85,9 @@ public class DBHelper {
                 .from(realm.where(PlaylistDAO.class)
                         .lessThanOrEqualTo(PlaylistDAO.COL_DATES + "." + AllowedDateDAO.COL_START, currentDate)
                         .greaterThan(PlaylistDAO.COL_DATES + "." + AllowedDateDAO.COL_END, currentDate)
+                        .equalTo(PlaylistDAO.COL_DOWNLOADING, false)
                         .findAll())
                 .switchIfEmpty(Observable.just(playlistDAO));
-    }
-
-    public static Observable<PlaylistDAO> getNotCachedPlaylist() {
-        Realm realm = getRealm();
-        return RealmResultsObservable.from(
-                realm.
-                        where(PlaylistDAO.class).
-                        equalTo(PlaylistDAO.COL_CACHE_STATUS, PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS).
-                        findAll()
-        );
     }
 
     /**
@@ -119,9 +108,7 @@ public class DBHelper {
 
     public static void updatePlaylist(PlaylistDAO playlistDAO) {
         Realm realm = getRealm();
-        realm.beginTransaction();
-        realm.copyToRealmOrUpdate(playlistDAO);
-        realm.commitTransaction();
+        realm.copyToRealm(playlistDAO);
     }
 
     public static boolean isUpdateNeed(PlaylistInfo playlistInfo) {
@@ -133,8 +120,6 @@ public class DBHelper {
         if (first == null)
             return true;
         if (!playlistInfo.getLastUpdated().equals(first.getLastUpdated()))
-            return true;
-        if (first.getCacheStatus() == PlaylistDAO.STATUS_NEED_TO_CACHE_ITEMS)
             return true;
         return false;
     }
@@ -161,5 +146,20 @@ public class DBHelper {
             all.deleteAllFromRealm();
             realm.commitTransaction();
         }
+    }
+
+    public static void replacePlaylistAfterLoad(PlaylistDAO playlistafterload) {
+        Realm realm = getRealm();
+        PlaylistDAO old = realm.where(PlaylistDAO.class)
+                .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistafterload.getId()))
+                .equalTo(PlaylistDAO.COL_DOWNLOADING, false).findFirst();
+        realm.beginTransaction();
+        if (old != null)
+            old.deleteFromRealm();
+
+        playlistafterload.setDownloading(false);
+        updatePlaylist(playlistafterload);
+        realm.commitTransaction();
+
     }
 }

@@ -13,7 +13,7 @@ public class PreferenceUtil {
     private static final String PREFERENCE_NAME = "ru.com.videopanel";
     private static final String LOGIN = "login";
     private static final String PASSWORD = "password";
-    private static final String IS_DATA_LOADED = "is_data_loaded";
+    private static final String CURRENT_PLAYLIST = "current_playlist";
     private static final String URL = "url";
     private static final String API_MOCK_URL = "http://videopanel.getsandbox.com/";
     private static final String API_DEFAULT_URL = "https://videopanel.herokuapp.com/api/";
@@ -34,6 +34,7 @@ public class PreferenceUtil {
         edit.putString(URL, url);
         edit.apply();
     }
+
 
     public boolean isLogin() {
         return !TextUtils.isEmpty(getLogin()) && !TextUtils.isEmpty(getPassword());
@@ -61,13 +62,13 @@ public class PreferenceUtil {
         edit.apply();
     }
 
-    public boolean isDataLoaded() {
-        return prefs.getBoolean(IS_DATA_LOADED, false);
+    public String getCurrentPlaylistId() {
+        return prefs.getString(CURRENT_PLAYLIST, "0");
     }
 
-    public void setDataLoaded() {
+    public void setCurrentPlaylistId(String id) {
         SharedPreferences.Editor edit = prefs.edit();
-        edit.putBoolean(IS_DATA_LOADED, true);
+        edit.putString(CURRENT_PLAYLIST, id);
         edit.apply();
     }
 }
