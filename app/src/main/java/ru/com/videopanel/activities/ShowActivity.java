@@ -12,9 +12,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-
-import com.afollestad.easyvideoplayer.EasyVideoCallback;
-import com.afollestad.easyvideoplayer.EasyVideoPlayer;
+import android.widget.VideoView;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -33,10 +31,10 @@ import ru.com.videopanel.utils.PreferenceUtil;
 
 public class ShowActivity extends AppCompatActivity {
     private PlaylistDAO currentPlaylist;
-    private EasyVideoPlayer videoView1;
-    private EasyVideoPlayer videoView2;
-    private EasyVideoPlayer currentVideoView;
-    private EasyVideoPlayer nextVideoView;
+    private VideoView videoView1;
+    private VideoView videoView2;
+    private VideoView currentVideoView;
+    private VideoView nextVideoView;
     private ImageView imageView1;
     private ImageView imageView2;
     private ImageView currentImageView;
@@ -68,8 +66,8 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     private void initViewsBeforeStart() {
-        videoView1 = (EasyVideoPlayer) findViewById(R.id.videoView);
-        videoView2 = (EasyVideoPlayer) findViewById(R.id.videoView2);
+        videoView1 = (VideoView) findViewById(R.id.videoView);
+        videoView2 = (VideoView) findViewById(R.id.videoView2);
         currentVideoView = videoView1;
         nextVideoView = videoView2;
         imageView1 = (ImageView) findViewById(R.id.imageView);
@@ -185,69 +183,22 @@ public class ShowActivity extends AppCompatActivity {
     private void showVideo(ItemDAO nextContent) {
         Uri video = Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
         Log.d("PLAYLIST", "SHOWVIDEO: " + nextContent.getUrl());
-        nextVideoView.setSource(video);
-        nextVideoView.setAutoPlay(true);
-        try {
-            nextVideoView.disableControls();
-        } catch (NullPointerException e) {
-            //Do nothing
-            Log.d("PLAYLIST", "disableControls");
-        }
-        nextVideoView.setAutoFullscreen(true);
-        nextVideoView.setCallback(new EasyVideoCallback() {
-            @Override
-            public void onStarted(EasyVideoPlayer player) {
-
-            }
-
-            @Override
-            public void onPaused(EasyVideoPlayer player) {
-
-            }
-
-            @Override
-            public void onPreparing(EasyVideoPlayer player) {
-
-            }
-
-            @Override
-            public void onPrepared(EasyVideoPlayer player) {
-            }
-
-            @Override
-            public void onBuffering(int percent) {
-            }
-
-            @Override
-            public void onError(EasyVideoPlayer player, Exception e) {
-                Log.d("PLAYLIST", "PLAYERROR: " + e.toString());
-                showNextContent();
-                //TODO check error
-            }
-
-            @Override
-            public void onCompletion(EasyVideoPlayer player) {
-                Log.d("PLAYLIST", "PLAYCOMPLETE");
-                player.pause();
-                showNextContent();
-            }
-
-            @Override
-            public void onRetry(EasyVideoPlayer player, Uri source) {
-
-            }
-
-            @Override
-            public void onSubmit(EasyVideoPlayer player, Uri source) {
-
-            }
+        nextVideoView.setVideoURI(video);
+        nextVideoView.start();
+        nextVideoView.setOnErrorListener((mp, what, extra) -> {
+            Log.d("PLAYLIST", "PLAYERROR");
+//            showNextContent();
+            return false;
+        });
+        nextVideoView.setOnCompletionListener(mp -> {
+            showNextContent();
         });
         crossFadeViews(currentView, nextVideoView);
         swapVideoViews();
     }
 
     private void swapVideoViews() {
-        EasyVideoPlayer tmpVideoView = currentVideoView;
+        VideoView tmpVideoView = currentVideoView;
         currentVideoView = nextVideoView;
         nextVideoView = tmpVideoView;
     }
@@ -292,9 +243,9 @@ public class ShowActivity extends AppCompatActivity {
 
     private void stop() {
         Log.d("PLAYLIST", "STOP");
-        currentVideoView.stop();
+        currentVideoView.stopPlayback();
         currentVideoView.setVisibility(View.GONE);
-        nextVideoView.stop();
+        nextVideoView.stopPlayback();
         nextVideoView.setVisibility(View.GONE);
         currentImageView.setVisibility(View.GONE);
         nextImageView.setVisibility(View.GONE);

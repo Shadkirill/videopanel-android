@@ -52,6 +52,9 @@ public class StartActivity extends AppCompatActivity {
         passwordEdit = (EditText) findViewById(R.id.password_edit);
         urlEdit = (EditText) findViewById(R.id.urlText);
         urlEdit.setText(preferenceUtil.getUrl());
+        loginEdit.setText("2");
+        passwordEdit.setText("vfrxcSGh");
+        urlEdit.setText("https://videopanel-dev.herokuapp.com/api/");
     }
 
     private void setApkVersion() {
