@@ -51,9 +51,6 @@ public class ShowActivity extends AppCompatActivity {
         hideStatusBar();
         setContentView(R.layout.activity_show);
         hideNavigationButtons();
-        initViewsBeforeStart();
-
-        getPlaylist();
     }
 
     private void hideStatusBar() {
