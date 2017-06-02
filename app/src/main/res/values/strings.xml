@@ -1,15 +1,19 @@
 <resources>
     <string name="app_name">VideoPanel</string>
     <string name="login">Войти</string>
-    <string name="password">Password</string>
-    <string name="login_button_text">Войти</string>
-    <string name="start_panel_button_text">Start panel</string>
-    <string name="logout_button_text">Logout</string>
     <string name="error">Ошибка</string>
-    <string name="login_missed">Login missed</string>
+    <string name="login_missed">Введите логин</string>
     <string name="ok">OK</string>
-    <string name="password_missed">Password missed</string>
-    <string name="incorrect_login_or_password">Incorrect login or password</string>
+    <string name="password_missed">Введите пароль</string>
     <string name="incorrect_data">Возникла ошибка при проверке данных, рекомендуем еще раз проверить их на правильность</string>
-    <string name="no_internet_connection">Нет связи с сервером. Проверьте интернет подключение. Выможете сохранить данные логина офлайн</string>
+    <string name="no_internet_connection">Нет связи с сервером. Проверьте интернет подключение. Вы можете сохранить данные логина офлайн</string>
+    <string name="vp_logo">VP</string>
+    <string name="greeting">Добро пожаловать!</string>
+    <string name="to_connect_1">Для подключения к серверу управления</string>
+    <string name="to_connect_2">авторизируйтесь пожалуйста</string>
+    <string name="terminal_id_hint">ID терминала</string>
+    <string name="password_hint">Пароль</string>
+    <string name="api_addres_hint">Адрес API</string>
+    <string name="alert_positive_change_data">Изменить данные</string>
+    <string name="alert_negative_save_anyway">Сохранить все равно</string>
 </resources>

@@ -26,6 +26,7 @@ import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.db.dao.ItemDAO;
 import ru.com.videopanel.db.dao.PlaylistDAO;
 import ru.com.videopanel.files.FileSystem;
+import ru.com.videopanel.models.Playlist;
 import ru.com.videopanel.models.PlaylistInfo;
 import ru.com.videopanel.models.Token;
 import ru.com.videopanel.utils.PreferenceUtil;
@@ -55,13 +56,13 @@ public class UpdateService extends Service {
 
     private void doOnUpdaterTick() {
         if (NetworkUtil.isOnline(getApplicationContext())) {
-            doOnelineTick();
+            doOnlineTick();
         } else {
             Log.e("SERVICETICK", "No internet connection");
         }
     }
 
-    private void doOnelineTick() {
+    private void doOnlineTick() {
         VideoService service = ServiceGenerator.createService(VideoService.class);
         service.login(preferenceUtil.getLogin(), preferenceUtil.getPassword())
                 .subscribeOn(Schedulers.io())
@@ -69,27 +70,13 @@ public class UpdateService extends Service {
                 .onErrorResumeNext(Observable.empty())
                 .flatMap(token -> getPlaylists(service, token))
                 .map(playlistInfos -> {
-                    String currentPlaylistId = preferenceUtil.getCurrentPlaylistId();
-                    RealmResults<PlaylistDAO> other = DBHelper.getOther(playlistInfos);
-                    for (PlaylistDAO pl : other) {
-                        if (pl.getId().equals(currentPlaylistId)) {
-                            EventBus.getDefault().post(new MessageEvent("stop"));
-                            break;
-                        }
-                    }
-
-                    DBHelper.deleteOther(playlistInfos);
-                    //TODO delete files
+                    deleteOutdatedPlaylists(playlistInfos);
                     return playlistInfos;
                 })
                 .flatMap(Observable::fromIterable)
                 .filter(DBHelper::isUpdateNeed)
                 .flatMap(playlistInfo ->
-                        service.playlistData(playlistInfo.getId(), tempToken)
-                                .doOnError(error -> {
-                                    Log.d("LOG", "ERROR", error);
-                                })
-                                .subscribeOn(Schedulers.io()))
+                        getPlaylistData(service, playlistInfo))
                 .map(playlist -> {
                     Log.d("LOADING", "start ID:" + playlist.getId());
                     PlaylistDAO playlistDAO = new PlaylistDAO(playlist);
@@ -98,7 +85,7 @@ public class UpdateService extends Service {
                     if (preferenceUtil.getCurrentPlaylistId().equals(String.valueOf(playlist.getId())))
                         EventBus.getDefault().post(new MessageEvent("stop"));
 
-                    fileSystem.replasePlaylistFilesToProduction(getFilesDir(), playlistDAO.getId());
+                    fileSystem.replacePlaylistFilesToProduction(getFilesDir(), playlistDAO.getId());
                     DBHelper.replacePlaylistAfterLoad(playlistafterload);
 
                     Log.d("LOADING", "finish ID:" + playlist.getId());
@@ -107,19 +94,48 @@ public class UpdateService extends Service {
                 .doOnNext(playlist -> Log.d("SERVICETICK", "updated ID:" + playlist.getId()))
                 .doOnComplete(() ->
                         {
-                            service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
-                                    (playlist) -> {
-                                        Log.d("LOGOUT", String.valueOf(playlist.code()));
-                                    },
-                                    error -> Log.d("LOGOUT", "ERROR", error),
-                                    () -> {
-                                    }
-                            );
-                            tempToken = null;
+                            logout(service);
                             Log.d("SERVICETICK", "complete");
                         }
                 )
                 .subscribe();
+    }
+
+    private void logout(VideoService service) {
+        service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
+                (playlist) -> {
+                    Log.d("LOGOUT", String.valueOf(playlist.code()));
+                },
+                error -> Log.d("LOGOUT", "ERROR", error),
+                () -> {
+                }
+        );
+        tempToken = null;
+    }
+
+    private Observable<Playlist> getPlaylistData(VideoService service, PlaylistInfo playlistInfo) {
+        return service.playlistData(playlistInfo.getId(), tempToken)
+                .doOnError(error -> {
+                    Log.d("LOG", "ERROR", error);
+                })
+                .subscribeOn(Schedulers.io());
+    }
+
+    private void deleteOutdatedPlaylists(List<PlaylistInfo> playlistInfos) {
+        stopPlaylistIfWeNeedDeleteIt(playlistInfos);
+        //TODO delete files
+        DBHelper.deleteOther(playlistInfos);
+    }
+
+    private void stopPlaylistIfWeNeedDeleteIt(List<PlaylistInfo> playlistInfos) {
+        String currentPlaylistId = preferenceUtil.getCurrentPlaylistId();
+        RealmResults<PlaylistDAO> other = DBHelper.getOther(playlistInfos);
+        for (PlaylistDAO pl : other) {
+            if (pl.getId().equals(currentPlaylistId)) {
+                EventBus.getDefault().post(new MessageEvent("stop"));
+                break;
+            }
+        }
     }
 
     private ObservableSource<List<PlaylistInfo>> getPlaylists(VideoService service, Token token) {

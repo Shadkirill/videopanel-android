@@ -87,7 +87,7 @@ public class ShowActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        //TODO start service here
+        startService(new Intent(this, UpdateService.class));
         EventBus.getDefault().register(this);
     }
 
@@ -97,6 +97,7 @@ public class ShowActivity extends AppCompatActivity {
         stopService(new Intent(this, UpdateService.class));
         EventBus.getDefault().unregister(this);
     }
+
 
     private void crossFadeViews(View from, View to) {
         int animationDuration = 2000;
@@ -252,45 +253,46 @@ public class ShowActivity extends AppCompatActivity {
         view.setVisibility(View.GONE);
     }
 
-    public void visibleView(View view) {
-        view.setVisibility(View.VISIBLE);
-    }
-
     @Override
     protected void onPause() {
         super.onPause();
-        currentVideoView.stop();
+        stop();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        start();
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(MessageEvent event) {
-        if (event.getCommand().equals("stop")) {
-            stop();
-        } else if (event.getCommand().equals("start")) {
-            start();
-        }
+        if (event.getCommand().equals("rerun"))
+            rerun();
+    }
+
+    private void rerun() {
+        stop();
+        start();
     }
 
     private void start() {
-        new PreferenceUtil(this).setCurrentPlaylistId("-1");
-        currentPlaylist = null;
-        currentPlayItem = -1;
-        getPlaylist();
+//        initViewsBeforeStart();
+        Handler playlistHandler = new Handler();
+        playlistHandler.postDelayed(this::getPlaylist, 5 * 1000);
     }
 
     private void stop() {
         currentVideoView.stop();
+        currentVideoView.release();
         currentVideoView.setVisibility(View.GONE);
         nextVideoView.stop();
+        nextVideoView.release();
         nextVideoView.setVisibility(View.GONE);
 
         showNothing();
         currentPlaylist = null;
         currentPlayItem = -1;
         new PreferenceUtil(this).setCurrentPlaylistId("-1");
-        initViewsBeforeStart();
-        Handler playlistHandler = new Handler();
-        playlistHandler.postDelayed(this::getPlaylist, 5 * 1000);
     }
 }

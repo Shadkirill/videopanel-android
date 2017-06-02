@@ -16,11 +16,21 @@ import ru.com.videopanel.db.dbutil.RealmResultsObservable;
 import ru.com.videopanel.models.PlaylistInfo;
 
 public class DBHelper {
+    private static Realm getRealm() {
+        return Realm.getDefaultInstance();
+    }
 
     public static Observable<PlaylistDAO> getAllPlaylist() {
         Realm realm = getRealm();
         return RealmResultsObservable
                 .from(realm.where(PlaylistDAO.class).findAll());
+    }
+
+    public static void clearDB() {
+        Realm realm = getRealm();
+        realm.beginTransaction();
+        realm.deleteAll();
+        realm.commitTransaction();
     }
 
     public static Observable<PlaylistDAO> getCurrentPlaylist() {
@@ -37,22 +47,6 @@ public class DBHelper {
                         .equalTo(PlaylistDAO.COL_DOWNLOADING, false)
                         .findAll())
                 .switchIfEmpty(Observable.just(playlistDAO));
-    }
-
-    /**
-     * Get
-     *
-     * @return
-     */
-    private static Realm getRealm() {
-        return Realm.getDefaultInstance();
-    }
-
-    public static void clearDB() {
-        Realm realm = getRealm();
-        realm.beginTransaction();
-        realm.deleteAll();
-        realm.commitTransaction();
     }
 
     public static void savePlaylist(PlaylistDAO playlistDAO) {

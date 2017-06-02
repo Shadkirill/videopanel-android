@@ -22,7 +22,6 @@ public class FileSystem {
     }
 
     private static void copyFileOrDirectory(String srcDir, String dstDir) {
-
         try {
             File src = new File(srcDir);
             File dst = new File(dstDir);
@@ -70,6 +69,7 @@ public class FileSystem {
         }
     }
 
+    //TODO add crc check
     private static long checksumMappedFile(String filepath) throws IOException {
         FileInputStream inputStream = new FileInputStream(filepath);
         FileChannel fileChannel = inputStream.getChannel();
@@ -81,25 +81,6 @@ public class FileSystem {
             crc.update(i);
         }
         return crc.getValue();
-    }
-
-    public String saveFile(File filedir, String playlistId, String url, String crc32) throws IOException {
-        String productionFileName = filedir.getPath() + "/" + DIRECTORY_PRODUCTION + "/" + playlistId + "/" + URLUtil.guessFileName(url, null, null);
-        String downloadingFileName = filedir.getPath() + "/" + DIRECTORY_DOWNLOADING + "/" + playlistId + "/" + URLUtil.guessFileName(url, null, null);
-        if (new File(productionFileName).exists()) {
-            copyFile(new File(productionFileName), new File(downloadingFileName));
-        } else {
-            downloadFileFromInternet(url, downloadingFileName, crc32);
-        }
-        return URLUtil.guessFileName(url, null, null);
-    }
-
-    public void replasePlaylistFilesToProduction(File filedir, String playlistId) {
-        String productionPlaylistDir = filedir.getPath() + "/" + DIRECTORY_PRODUCTION + "/" + playlistId;
-        String downloadingPlaylistDir = filedir.getPath() + "/" + DIRECTORY_DOWNLOADING + "/" + playlistId;
-        deleteRecursive(new File(productionPlaylistDir));
-        copyFileOrDirectory(downloadingPlaylistDir, productionPlaylistDir);
-        deleteRecursive(new File(downloadingPlaylistDir));
     }
 
     private void downloadFileFromInternet(String url, String direction, String crc32) throws IOException {
@@ -125,6 +106,25 @@ public class FileSystem {
 ////            throw new IOException("Incorrect CRC check");
 //            return;
 //        }
+    }
+
+    public String saveFile(File filedir, String playlistId, String url, String crc32) throws IOException {
+        String productionFileName = filedir.getPath() + "/" + DIRECTORY_PRODUCTION + "/" + playlistId + "/" + URLUtil.guessFileName(url, null, null);
+        String downloadingFileName = filedir.getPath() + "/" + DIRECTORY_DOWNLOADING + "/" + playlistId + "/" + URLUtil.guessFileName(url, null, null);
+        if (new File(productionFileName).exists()) {
+            copyFile(new File(productionFileName), new File(downloadingFileName));
+        } else {
+            downloadFileFromInternet(url, downloadingFileName, crc32);
+        }
+        return URLUtil.guessFileName(url, null, null);
+    }
+
+    public void replacePlaylistFilesToProduction(File filedir, String playlistId) {
+        String productionPlaylistDir = filedir.getPath() + "/" + DIRECTORY_PRODUCTION + "/" + playlistId;
+        String downloadingPlaylistDir = filedir.getPath() + "/" + DIRECTORY_DOWNLOADING + "/" + playlistId;
+        deleteRecursive(new File(productionPlaylistDir));
+        copyFileOrDirectory(downloadingPlaylistDir, productionPlaylistDir);
+        deleteRecursive(new File(downloadingPlaylistDir));
     }
 
     void deleteRecursive(File fileOrDirectory) {

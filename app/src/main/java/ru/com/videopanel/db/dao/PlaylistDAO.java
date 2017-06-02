@@ -13,8 +13,6 @@ public class PlaylistDAO extends RealmObject {
     public static final String COL_DATES = "dates";
     public static final String COL_DOWNLOADING = "downloading";
 
-    public static final int STATUS_READY = 1;
-    public static final int STATUS_NEED_TO_CACHE_ITEMS = 0;
     public String id;
     private String lastUpdated;
     private RealmList<ItemDAO> items;

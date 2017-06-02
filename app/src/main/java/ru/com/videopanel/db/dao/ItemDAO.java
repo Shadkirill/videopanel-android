@@ -12,13 +12,11 @@ public class ItemDAO extends RealmObject {
     public static final String TYPE_IMAGE = "Image";
     public static final String TYPE_VIDEO = "Video";
 
-    public static final int STATUS_READY = 1;
-    public static final int STATUS_NEED_TO_CACHE = 0;
     private String itemType;
     private String url;
     private Long duration;
     private String crc32;
-    private int cacheStatus = STATUS_NEED_TO_CACHE;
+
 
     public ItemDAO() {
 
@@ -61,17 +59,5 @@ public class ItemDAO extends RealmObject {
 
     public void setCrc32(String crc32) {
         this.crc32 = crc32;
-    }
-
-    public int getCacheStatus() {
-        return cacheStatus;
-    }
-
-    public void setCacheStatus(int cacheStatus) {
-        this.cacheStatus = cacheStatus;
-    }
-
-    public boolean isCached() {
-        return cacheStatus == STATUS_READY;
     }
 }
