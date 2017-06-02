@@ -267,7 +267,7 @@ public class ShowActivity extends AppCompatActivity {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMessageEvent(MessageEvent event) {
-        if (event.getCommand().equals("rerun"))
+        if (event.getCommand().equals("stop"))
             rerun();
     }
 
