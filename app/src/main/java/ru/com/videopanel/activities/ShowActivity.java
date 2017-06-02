@@ -187,7 +187,11 @@ public class ShowActivity extends AppCompatActivity {
 
         nextVideoView.setSource(video);
         nextVideoView.setAutoPlay(true);
-        nextVideoView.disableControls();
+        try {
+            nextVideoView.disableControls();
+        } catch (NullPointerException e) {
+            //Do nothing
+        }
         nextVideoView.setAutoFullscreen(true);
         nextVideoView.setCallback(new EasyVideoCallback() {
             @Override
@@ -277,18 +281,18 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     private void start() {
-//        initViewsBeforeStart();
+        initViewsBeforeStart();
         Handler playlistHandler = new Handler();
         playlistHandler.postDelayed(this::getPlaylist, 5 * 1000);
     }
 
     private void stop() {
         currentVideoView.stop();
-        currentVideoView.release();
         currentVideoView.setVisibility(View.GONE);
         nextVideoView.stop();
-        nextVideoView.release();
         nextVideoView.setVisibility(View.GONE);
+        currentImageView.setVisibility(View.GONE);
+        nextImageView.setVisibility(View.GONE);
 
         showNothing();
         currentPlaylist = null;

@@ -135,14 +135,12 @@
             android:inputType="number"
             android:padding="8dp"
             android:singleLine="true"
-
             android:textColorHint="#999999"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/constraintLayout" />
-        <!--android:text="2"-->
-        <!--android:text="vfrxcSGh"-->
+
         <EditText
             android:id="@+id/password_edit"
             android:layout_width="0dp"
