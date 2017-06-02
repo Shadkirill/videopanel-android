@@ -47,75 +47,87 @@ public class UpdateService extends Service {
                 .doOnNext(aLong ->
                         {
                             if (NetworkUtil.isOnline(getApplicationContext())) {
-                                VideoService service = ServiceGenerator.createService(VideoService.class);
-                                service.login(preferenceUtil.getLogin(), preferenceUtil.getPassword())
-                                        .subscribeOn(Schedulers.io())
-                                        .observeOn(AndroidSchedulers.mainThread())
-                                        .onErrorResumeNext(Observable.empty())
-                                        .flatMap(token -> {
-                                            tempToken = token.getToken();
-                                            return service.playlists(tempToken)
-                                                    .subscribeOn(Schedulers.io());
-                                        })
-                                        .map(playlistInfos -> {
-                                            String currentPlaylistId = preferenceUtil.getCurrentPlaylistId();
-                                            for (PlaylistInfo pl : playlistInfos) {
-                                                if (currentPlaylistId.equals(String.valueOf(pl.getId()))) {
-                                                    if (DBHelper.isUpdateNeed(pl)) {
-                                                        EventBus.getDefault().post(new MessageEvent("stop"));
-                                                        DBHelper.deleteOther(playlistInfos);
-                                                        EventBus.getDefault().post(new MessageEvent("start"));
-                                                        return playlistInfos;
-                                                    }
-                                                }
-                                            }
-                                            DBHelper.deleteOther(playlistInfos);
-                                            //TODO delete files
-                                            return playlistInfos;
-                                        })
-                                        .flatMap(Observable::fromIterable)
-                                        .filter(DBHelper::isUpdateNeed)
-                                        .flatMap(playlistInfo ->
-                                                service.playlistData(playlistInfo.getId(), tempToken)
-                                                        .doOnError(error -> {
-                                                            Log.d("LOG", "ERROR", error);
-                                                        })
-                                                        .subscribeOn(Schedulers.io()))
-                                        .map(playlist -> {
-                                            Log.d("LOADING", "start ID:" + playlist.getId());
-                                            PlaylistDAO playlistDAO = DBHelper.addPlaylist(playlist);
-                                            PlaylistDAO playlistafterload = loadFiles(playlistDAO);
-
-                                            if (preferenceUtil.getCurrentPlaylistId().equals(String.valueOf(playlist.getId())))
-                                                EventBus.getDefault().post(new MessageEvent("stop"));
-
-                                            fileSystem.replasePlaylistFilesToProduction(getFilesDir(), playlistDAO.getId());
-                                            DBHelper.replacePlaylistAfterLoad(playlistafterload);
-
-                                            if (preferenceUtil.getCurrentPlaylistId().equals(String.valueOf(playlist.getId())))
-                                                EventBus.getDefault().post(new MessageEvent("start"));
-                                            Log.d("LOADING", "finish ID:" + playlist.getId());
-                                            return playlist;
-                                        })
-                                        .doOnNext(playlist -> Log.d("SERVICETICK", "updated ID:" + playlist.getId()))
-                                        .doOnComplete(() ->
-                                                {
-                                                    service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
-                                                            (playlist) -> {
-                                                                Log.d("LOGOUT", String.valueOf(playlist.code()));
-                                                            },
-                                                            error -> Log.d("LOGOUT", "ERROR", error),
-                                                            () -> {
-                                                            }
-                                                    );
-                                                    tempToken = null;
-                                                    Log.d("SERVICETICK", "complete");
-                                                }
-                                        )
-                                        .subscribe();
+                                updateIfNeeded();
                             } else {
                                 Log.e("SERVICETICK", "No internet connection");
                             }
+                        }
+                )
+                .subscribe();
+    }
+
+    private void updateIfNeeded() {
+        VideoService service = ServiceGenerator.createService(VideoService.class);
+        service.login(preferenceUtil.getLogin(), preferenceUtil.getPassword())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .onErrorResumeNext(Observable.empty())
+                .flatMap(token -> {
+                    tempToken = token.getToken();
+                    return service.playlists(tempToken)
+                            .subscribeOn(Schedulers.io());
+                })
+                .map(playlistInfos -> {
+                    String currentPlaylistId = preferenceUtil.getCurrentPlaylistId();
+                    for (PlaylistInfo remotePlaylist : playlistInfos) {
+                        if (!currentPlaylistId.equals(String.valueOf(remotePlaylist.getId()))) {
+                            continue;
+                        }
+                        Log.d("DEBUG", "Current playlist: " + currentPlaylistId + " | Remote ID: " + remotePlaylist.getId());
+
+                        if (!DBHelper.isUpdateNeed(remotePlaylist)) {
+                            continue;
+                        }
+                        Log.d("DEBUG", "Is update needed: " + DBHelper.isUpdateNeed(remotePlaylist));
+
+
+                        EventBus.getDefault().post(new MessageEvent("stop"));
+                        DBHelper.deleteOther(playlistInfos);
+                        EventBus.getDefault().post(new MessageEvent("start"));
+                        return playlistInfos;
+                    }
+                    DBHelper.deleteOther(playlistInfos);
+                    //TODO delete files
+                    return playlistInfos;
+                })
+                .flatMap(Observable::fromIterable)
+                .filter(DBHelper::isUpdateNeed)
+                .flatMap(playlistInfo ->
+                        service.playlistData(playlistInfo.getId(), tempToken)
+                                .doOnError(error -> {
+                                    Log.d("LOG", "ERROR", error);
+                                })
+                                .subscribeOn(Schedulers.io()))
+                .map(playlist -> {
+                    Log.d("LOADING", "start ID:" + playlist.getId());
+                    PlaylistDAO playlistDAO = DBHelper.addPlaylist(playlist);
+                    PlaylistDAO playlistafterload = loadFiles(playlistDAO);
+
+                    if (preferenceUtil.getCurrentPlaylistId().equals(String.valueOf(playlist.getId())))
+                        EventBus.getDefault().post(new MessageEvent("stop"));
+
+                    fileSystem.replasePlaylistFilesToProduction(getFilesDir(), playlistDAO.getId());
+                    Log.d("DEBUG", "Remote playlist last updated: " + playlistafterload.getLastUpdated());
+                    DBHelper.replacePlaylistAfterLoad(playlistafterload);
+
+                    if (preferenceUtil.getCurrentPlaylistId().equals(String.valueOf(playlist.getId())))
+                        EventBus.getDefault().post(new MessageEvent("start"));
+                    Log.d("LOADING", "finish ID:" + playlist.getId());
+                    return playlist;
+                })
+                .doOnNext(playlist -> Log.d("SERVICETICK", "updated ID:" + playlist.getId()))
+                .doOnComplete(() ->
+                        {
+                            service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
+                                    (playlist) -> {
+                                        Log.d("LOGOUT", String.valueOf(playlist.code()));
+                                    },
+                                    error -> Log.d("LOGOUT", "ERROR", error),
+                                    () -> {
+                                    }
+                            );
+                            tempToken = null;
+                            Log.d("SERVICETICK", "complete");
                         }
                 )
                 .subscribe();

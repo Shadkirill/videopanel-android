@@ -1,5 +1,7 @@
 package ru.com.videopanel.db;
 
+import android.util.Log;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -110,16 +112,26 @@ public class DBHelper {
         realm.copyToRealm(playlistDAO);
     }
 
-    public static boolean isUpdateNeed(PlaylistInfo playlistInfo) {
+    public static boolean isUpdateNeed(PlaylistInfo remotePlaylist) {
         Realm realm = getRealm();
-        PlaylistDAO first = realm.
+        PlaylistDAO localPlaylist = realm.
                 where(PlaylistDAO.class)
-                .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistInfo.getId()))
+                .equalTo(PlaylistDAO.COL_ID, String.valueOf(remotePlaylist.getId()))
                 .findFirst();
-        if (first == null)
+
+        // If playlist is not downloaded
+        if (localPlaylist == null) {
+            Log.d("DEBUG", "Need update");
             return true;
-        if (!playlistInfo.getLastUpdated().equals(first.getLastUpdated()))
+        }
+
+        // If last updated is not equal
+        if (!remotePlaylist.getLastUpdated().equals(localPlaylist.getLastUpdated())) {
+            Log.d("DEBUG", "Need update, remote: " + remotePlaylist.getLastUpdated() + " | local: " + localPlaylist.getLastUpdated());
             return true;
+        }
+
+        Log.d("DEBUG", "No update needed");
         return false;
     }
 
@@ -168,14 +180,22 @@ public class DBHelper {
     }
 
     public static void replacePlaylistAfterLoad(PlaylistDAO playlistafterload) {
-        Realm realm = getRealm();
-        PlaylistDAO old = realm.where(PlaylistDAO.class)
-                .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistafterload.getId()))
-                .equalTo(PlaylistDAO.COL_DOWNLOADING, false).findFirst();
-        realm.beginTransaction();
-        if (old != null)
-            old.deleteFromRealm();
+        Log.d("DEBUG", "Playlist after load last updated: " + playlistafterload.getLastUpdated());
+        Log.d("DEBUG", "Playlist after load is downloading: " + playlistafterload.isDownloading());
 
+        Realm realm = getRealm();
+        RealmResults<PlaylistDAO> old = realm.where(PlaylistDAO.class)
+                .equalTo(PlaylistDAO.COL_ID, String.valueOf(playlistafterload.getId()))
+                .equalTo(PlaylistDAO.COL_DOWNLOADING, false).findAll();
+        realm.beginTransaction();
+
+        old.deleteAllFromRealm();
+
+//        if (old != null) {
+//            Log.d("DEBUG", "Deleted old playlist with last updated date: " + old.getLastUpdated());
+//            old.deleteFromRealm();
+//        }
+//
         playlistafterload.setDownloading(false);
         updatePlaylist(playlistafterload);
         realm.commitTransaction();
