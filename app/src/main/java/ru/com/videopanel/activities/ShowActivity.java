@@ -1,5 +1,7 @@
 package ru.com.videopanel.activities;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,7 +12,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
-import android.widget.VideoView;
+
+import com.afollestad.easyvideoplayer.EasyVideoCallback;
+import com.afollestad.easyvideoplayer.EasyVideoPlayer;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -29,35 +33,61 @@ import ru.com.videopanel.utils.PreferenceUtil;
 
 public class ShowActivity extends AppCompatActivity {
     private PlaylistDAO currentPlaylist;
-    private VideoView videoView;
-    private ImageView imageView;
+    private EasyVideoPlayer videoView1;
+    private EasyVideoPlayer videoView2;
+    private EasyVideoPlayer currentVideoView;
+    private EasyVideoPlayer nextVideoView;
+    private ImageView imageView1;
+    private ImageView imageView2;
+    private ImageView currentImageView;
+    private ImageView nextImageView;
+
+    private View currentView;
     private int currentPlayItem = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        hideStatusBar();
+        setContentView(R.layout.activity_show);
+        hideNavigationButtons();
+        initViewsBeforeStart();
 
+        getPlaylist();
+    }
+
+    private void hideStatusBar() {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
 
-        setContentView(R.layout.activity_show);
-
+    private void hideNavigationButtons() {
         getSupportActionBar().hide();
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
+    }
 
-        videoView = (VideoView) findViewById(R.id.videoView);
-        imageView = (ImageView) findViewById(R.id.imageView);
+    private void initViewsBeforeStart() {
+        videoView1 = (EasyVideoPlayer) findViewById(R.id.videoView);
+        videoView2 = (EasyVideoPlayer) findViewById(R.id.videoView2);
+        currentVideoView = videoView1;
+        nextVideoView = videoView2;
+        imageView1 = (ImageView) findViewById(R.id.imageView);
+        imageView2 = (ImageView) findViewById(R.id.imageView2);
+        currentImageView = imageView1;
+        nextImageView = imageView2;
 
-        getPlaylist();
+        currentView = currentImageView;
+        currentImageView.setVisibility(View.VISIBLE);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        //TODO start service here
         EventBus.getDefault().register(this);
     }
 
@@ -66,6 +96,27 @@ public class ShowActivity extends AppCompatActivity {
         super.onStop();
         stopService(new Intent(this, UpdateService.class));
         EventBus.getDefault().unregister(this);
+    }
+
+    private void crossFadeViews(View from, View to) {
+        int animationDuration = 2000;
+        to.setAlpha(0f);
+        to.setVisibility(View.VISIBLE);
+        to.animate()
+                .alpha(1f)
+                .setDuration(animationDuration)
+                .setListener(null);
+
+        from.animate()
+                .alpha(0f)
+                .setDuration(animationDuration)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        from.setVisibility(View.GONE);
+                    }
+                });
+        currentView = to;
     }
 
     private void getPlaylist() {
@@ -100,33 +151,9 @@ public class ShowActivity extends AppCompatActivity {
             if (currentPlayItem != -1 && currentPlayItem < currentPlaylist.getItems().size()) {
                 ItemDAO nextContent = currentPlaylist.getItems().get(currentPlayItem);
                 if (nextContent.getItemType().equals(ItemDAO.TYPE_VIDEO)) {
-                    goneView(imageView);
-                    visibleView(videoView);
-                    try {
-                        Uri video = Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
-                        videoView.setVideoURI(video);
-                    } catch (Exception e) {
-                        Log.e("Error", e.getMessage());
-                        e.printStackTrace();
-                        showNextContent();
-                    }
-
-                    videoView.requestFocus();
-                    videoView.setOnPreparedListener(mp -> {
-                        videoView.start();
-                    });
-
-                    videoView.setOnCompletionListener(mp -> {
-                        videoView.suspend();
-                        showNextContent();
-                    });
+                    showVideo(nextContent);
                 } else if (nextContent.getItemType().equals(ItemDAO.TYPE_IMAGE)) {
-                    goneView(videoView);
-                    visibleView(imageView);
-                    imageView.setImageURI(Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl())));
-
-                    Handler playlistHandler = new Handler();
-                    playlistHandler.postDelayed(this::showNextContent, nextContent.getDuration() * 1000);
+                    showImage(nextContent);
                 }
 
             } else {
@@ -138,9 +165,87 @@ public class ShowActivity extends AppCompatActivity {
         }
     }
 
+    private void showImage(ItemDAO nextContent) {
+        nextImageView.setImageURI(Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl())));
+        crossFadeViews(currentView, nextImageView);
+
+        swapImageViews();
+
+        Handler playlistHandler = new Handler();
+        playlistHandler.postDelayed(this::showNextContent, nextContent.getDuration() * 1000);
+    }
+
+    private void swapImageViews() {
+        ImageView tmpImageView = currentImageView;
+        currentImageView = nextImageView;
+        nextImageView = tmpImageView;
+    }
+
+    private void showVideo(ItemDAO nextContent) {
+        Uri video = Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
+
+        nextVideoView.setSource(video);
+        nextVideoView.setAutoPlay(true);
+        nextVideoView.disableControls();
+        nextVideoView.setAutoFullscreen(true);
+        nextVideoView.setCallback(new EasyVideoCallback() {
+            @Override
+            public void onStarted(EasyVideoPlayer player) {
+
+            }
+
+            @Override
+            public void onPaused(EasyVideoPlayer player) {
+
+            }
+
+            @Override
+            public void onPreparing(EasyVideoPlayer player) {
+
+            }
+
+            @Override
+            public void onPrepared(EasyVideoPlayer player) {
+            }
+
+            @Override
+            public void onBuffering(int percent) {
+            }
+
+            @Override
+            public void onError(EasyVideoPlayer player, Exception e) {
+                showNextContent();
+                //TODO check error
+            }
+
+            @Override
+            public void onCompletion(EasyVideoPlayer player) {
+                player.pause();
+                showNextContent();
+            }
+
+            @Override
+            public void onRetry(EasyVideoPlayer player, Uri source) {
+
+            }
+
+            @Override
+            public void onSubmit(EasyVideoPlayer player, Uri source) {
+
+            }
+        });
+        crossFadeViews(currentView, nextVideoView);
+        swapVideoViews();
+    }
+
+    private void swapVideoViews() {
+        EasyVideoPlayer tmpVideoView = currentVideoView;
+        currentVideoView = nextVideoView;
+        nextVideoView = tmpVideoView;
+    }
+
     private void showNothing() {
-        goneView(imageView);
-        goneView(videoView);
+        goneView(currentView);
     }
 
     public void goneView(View view) {
@@ -154,7 +259,7 @@ public class ShowActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        videoView.suspend();
+        currentVideoView.stop();
     }
 
 
@@ -175,11 +280,16 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     private void stop() {
-        videoView.suspend();
+        currentVideoView.stop();
+        currentVideoView.setVisibility(View.GONE);
+        nextVideoView.stop();
+        nextVideoView.setVisibility(View.GONE);
+
         showNothing();
         currentPlaylist = null;
         currentPlayItem = -1;
         new PreferenceUtil(this).setCurrentPlaylistId("-1");
+        initViewsBeforeStart();
         Handler playlistHandler = new Handler();
         playlistHandler.postDelayed(this::getPlaylist, 5 * 1000);
     }
