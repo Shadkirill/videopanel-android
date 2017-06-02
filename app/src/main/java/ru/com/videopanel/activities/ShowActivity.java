@@ -125,6 +125,7 @@ public class ShowActivity extends AppCompatActivity {
                 .subscribe(
                         playlist -> {
                             currentPlaylist = playlist;
+                            Log.d("PLAYLIST", "NEWLIST: " + currentPlaylist.getId());
                             if (currentPlaylist.getId() == null) {
                                 showNothing();
                                 Handler handler = new Handler();
@@ -148,6 +149,7 @@ public class ShowActivity extends AppCompatActivity {
             currentPlayItem++;
             if (currentPlayItem != -1 && currentPlayItem < currentPlaylist.getItems().size()) {
                 ItemDAO nextContent = currentPlaylist.getItems().get(currentPlayItem);
+                Log.d("PLAYLIST", "NEXTCONTENT: " + nextContent.getUrl() + " TYPE:" + nextContent.getItemType());
                 if (nextContent.getItemType().equals(ItemDAO.TYPE_VIDEO)) {
                     showVideo(nextContent);
                 } else if (nextContent.getItemType().equals(ItemDAO.TYPE_IMAGE)) {
@@ -165,6 +167,7 @@ public class ShowActivity extends AppCompatActivity {
 
     private void showImage(ItemDAO nextContent) {
         nextImageView.setImageURI(Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl())));
+        Log.d("PLAYLIST", "SHOWIMAGE: " + nextContent.getUrl());
         crossFadeViews(currentView, nextImageView);
 
         swapImageViews();
@@ -181,13 +184,14 @@ public class ShowActivity extends AppCompatActivity {
 
     private void showVideo(ItemDAO nextContent) {
         Uri video = Uri.parse(FileSystem.getFilePath(getFilesDir(), currentPlaylist.getId(), nextContent.getUrl()));
-
+        Log.d("PLAYLIST", "SHOWVIDEO: " + nextContent.getUrl());
         nextVideoView.setSource(video);
         nextVideoView.setAutoPlay(true);
         try {
             nextVideoView.disableControls();
         } catch (NullPointerException e) {
             //Do nothing
+            Log.d("PLAYLIST", "disableControls");
         }
         nextVideoView.setAutoFullscreen(true);
         nextVideoView.setCallback(new EasyVideoCallback() {
@@ -216,12 +220,14 @@ public class ShowActivity extends AppCompatActivity {
 
             @Override
             public void onError(EasyVideoPlayer player, Exception e) {
+                Log.d("PLAYLIST", "PLAYERROR: " + e.toString());
                 showNextContent();
                 //TODO check error
             }
 
             @Override
             public void onCompletion(EasyVideoPlayer player) {
+                Log.d("PLAYLIST", "PLAYCOMPLETE");
                 player.pause();
                 showNextContent();
             }
@@ -278,12 +284,14 @@ public class ShowActivity extends AppCompatActivity {
     }
 
     private void start() {
+        Log.d("PLAYLIST", "START");
         initViewsBeforeStart();
         Handler playlistHandler = new Handler();
         playlistHandler.postDelayed(this::getPlaylist, 5 * 1000);
     }
 
     private void stop() {
+        Log.d("PLAYLIST", "STOP");
         currentVideoView.stop();
         currentVideoView.setVisibility(View.GONE);
         nextVideoView.stop();
