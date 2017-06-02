@@ -2,6 +2,9 @@ package ru.com.videopanel.db.dao;
 
 import io.realm.RealmList;
 import io.realm.RealmObject;
+import ru.com.videopanel.models.AllowedDate;
+import ru.com.videopanel.models.Item;
+import ru.com.videopanel.models.Playlist;
 
 public class PlaylistDAO extends RealmObject {
     public static final String COL_ID = "id";
@@ -12,12 +15,33 @@ public class PlaylistDAO extends RealmObject {
 
     public static final int STATUS_READY = 1;
     public static final int STATUS_NEED_TO_CACHE_ITEMS = 0;
-
     public String id;
     private String lastUpdated;
     private RealmList<ItemDAO> items;
     private RealmList<AllowedDateDAO> dates;
     private boolean downloading = true;
+
+    public PlaylistDAO() {
+
+    }
+
+    public PlaylistDAO(Playlist source) {
+        this.id = String.valueOf(source.getId());
+        this.lastUpdated = source.getLastUpdated();
+        downloading = true;
+
+        RealmList<ItemDAO> sourceItems = new RealmList<>();
+        for (Item sourceItem : source.getItems()) {
+            sourceItems.add(new ItemDAO(sourceItem));
+        }
+        this.items = sourceItems;
+
+        RealmList<AllowedDateDAO> sourceDates = new RealmList<>();
+        for (AllowedDate sourceDate : source.getAllowedDates()) {
+            sourceDates.add(new AllowedDateDAO(sourceDate));
+        }
+        this.dates = sourceDates;
+    }
 
     public String getId() {
         return id;

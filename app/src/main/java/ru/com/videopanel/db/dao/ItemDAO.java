@@ -1,6 +1,7 @@
 package ru.com.videopanel.db.dao;
 
 import io.realm.RealmObject;
+import ru.com.videopanel.models.Item;
 
 public class ItemDAO extends RealmObject {
     public static final String COL_TYPE = "itemType";
@@ -13,13 +14,22 @@ public class ItemDAO extends RealmObject {
 
     public static final int STATUS_READY = 1;
     public static final int STATUS_NEED_TO_CACHE = 0;
-
     private String itemType;
     private String url;
     private Long duration;
     private String crc32;
-
     private int cacheStatus = STATUS_NEED_TO_CACHE;
+
+    public ItemDAO() {
+
+    }
+
+    public ItemDAO(Item source) {
+        this.itemType = source.getItemType();
+        this.url = source.getUrl();
+        this.duration = Math.round(source.getDuration() != null ? source.getDuration() : 0);
+        this.crc32 = source.getCrc32();
+    }
 
     public String getItemType() {
         return itemType;
