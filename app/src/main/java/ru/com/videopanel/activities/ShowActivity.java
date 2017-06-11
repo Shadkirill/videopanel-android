@@ -135,7 +135,10 @@ public class ShowActivity extends AppCompatActivity {
                                 showNextContent();
                             }
                         },
-                        error -> Log.d("LOG", "ERROR", error),
+                        error -> {
+                            DBHelper.addErrorReport("Show Activity: Get playlist error", error);
+                            Log.d("LOG", "ERROR", error);
+                        },
                         () -> {
 
                         }
@@ -156,8 +159,8 @@ public class ShowActivity extends AppCompatActivity {
 
             } else {
                 currentPlayItem = -1;
-                //TODO send logs
-                //TODO if we have time shownext if not get play
+                DBHelper.addPlayedPlaylistReport(
+                        currentPlaylist.getId());
                 getPlaylist();
             }
         }
@@ -187,6 +190,7 @@ public class ShowActivity extends AppCompatActivity {
         nextVideoView.start();
         nextVideoView.setOnErrorListener((mp, what, extra) -> {
             Log.d("PLAYLIST", "PLAYERROR");
+            DBHelper.addErrorReport("Show Activity: Video load error. Video file:" + nextContent.getUrl(), null);
 //            showNextContent();
             return false;
         });

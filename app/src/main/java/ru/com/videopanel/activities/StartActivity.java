@@ -19,6 +19,7 @@ import ru.com.videopanel.R;
 import ru.com.videopanel.api.NetworkUtil;
 import ru.com.videopanel.api.ServiceGenerator;
 import ru.com.videopanel.api.VideoService;
+import ru.com.videopanel.db.DBHelper;
 import ru.com.videopanel.models.Token;
 import ru.com.videopanel.utils.PreferenceUtil;
 
@@ -52,9 +53,10 @@ public class StartActivity extends AppCompatActivity {
         passwordEdit = (EditText) findViewById(R.id.password_edit);
         urlEdit = (EditText) findViewById(R.id.urlText);
         urlEdit.setText(preferenceUtil.getUrl());
-        loginEdit.setText("2");
-        passwordEdit.setText("vfrxcSGh");
-        urlEdit.setText("https://videopanel-dev.herokuapp.com/api/");
+
+//        loginEdit.setText("4");
+//        passwordEdit.setText("lewnuBL4");
+//        urlEdit.setText("https://videopanel.herokuapp.com/api/");
     }
 
     private void setApkVersion() {
@@ -97,7 +99,8 @@ public class StartActivity extends AppCompatActivity {
                             },
                             error -> {
                                 dialog.dismiss();
-                                Log.d("LOG", "ERROR", error);//TODO Log error
+                                Log.d("LOG", "ERROR", error);
+                                DBHelper.addErrorReport("Login on start screen error", error);
                                 showAlternativeErrorAlert(R.string.incorrect_data);
                             },
                             () -> {
@@ -105,6 +108,7 @@ public class StartActivity extends AppCompatActivity {
                     );
         } else {
             showAlternativeErrorAlert(R.string.no_internet_connection);
+            DBHelper.addErrorReport("No internet connection", null);
             Log.e("STARTACTIVITY", "No internet connection");
         }
     }
@@ -115,7 +119,10 @@ public class StartActivity extends AppCompatActivity {
                 (playlist) -> {
                     Log.d("LOGOUT", String.valueOf(playlist.code()));
                 },
-                error -> Log.d("LOGOUT", "ERROR", error),
+                error -> {
+                    DBHelper.addErrorReport("Logout error after first login", error);
+                    Log.d("LOGOUT", "ERROR", error);
+                },
                 () -> {
                 }
         );

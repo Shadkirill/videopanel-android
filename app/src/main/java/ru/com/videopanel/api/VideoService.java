@@ -1,13 +1,14 @@
 package ru.com.videopanel.api;
 
 
+import java.util.HashMap;
 import java.util.List;
 
 import io.reactivex.Observable;
 import retrofit2.Response;
-import retrofit2.http.Field;
-import retrofit2.http.FormUrlEncoded;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
 import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
@@ -31,12 +32,10 @@ public interface VideoService {
     @GET("playlist/{id}")
     Observable<Playlist> playlistData(@Path("id") int groupId, @Query("token") String token);
 
-    @FormUrlEncoded
     @POST("report/error")
-    Observable<Response<Void>> reportError(@Field("terminal_id") String terminalId, @Field("playlist_id") String plaulistId, @Field("date") String date, @Field("error") String error);
+    Observable<Response<Void>> reportError(@Body HashMap<String, Object> body);
 
-    @FormUrlEncoded
-    @POST("report")
-    Observable<Response<Void>> reportPlaylist(@Query("token") String token, @Field("playlist_id") String playlistId, @Field("date") String date);
+    @POST("report/played/{id}")
+    Observable<Response<Void>> reportPlaylist(@Header("token") String token, @Path("id") String playlistId, @Body HashMap<String, Object> body);
 
 }

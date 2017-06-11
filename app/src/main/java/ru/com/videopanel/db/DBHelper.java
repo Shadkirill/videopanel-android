@@ -2,15 +2,21 @@ package ru.com.videopanel.db;
 
 import android.util.Log;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import io.reactivex.Observable;
 import io.realm.Realm;
 import io.realm.RealmQuery;
 import io.realm.RealmResults;
 import ru.com.videopanel.db.dao.AllowedDateDAO;
+import ru.com.videopanel.db.dao.ErrorReportDAO;
+import ru.com.videopanel.db.dao.PlayedPlaylistReportDAO;
 import ru.com.videopanel.db.dao.PlaylistDAO;
 import ru.com.videopanel.db.dbutil.RealmResultsObservable;
 import ru.com.videopanel.models.PlaylistInfo;
@@ -114,5 +120,65 @@ public class DBHelper {
             playlistDAO.getDates().deleteAllFromRealm();
         }
         delete.deleteAllFromRealm();
+    }
+
+    public static Observable<ErrorReportDAO> getErrors() {
+        Realm realm = getRealm();
+        return RealmResultsObservable
+                .from(realm.where(ErrorReportDAO.class).findAll())
+                .switchIfEmpty(Observable.empty());
+    }
+
+
+    public static void addErrorReport(String shortText, Throwable throwable) {
+        Realm realm = getRealm();
+        realm.beginTransaction();
+        ErrorReportDAO report = realm.createObject(ErrorReportDAO.class);
+        String date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(new Date());
+        report.setDate(date);
+        report.setShortText(shortText);
+
+        if (throwable != null) {
+            StringWriter sw = new StringWriter();
+            throwable.printStackTrace(new PrintWriter(sw));
+            String exceptionAsString = sw.toString();
+            report.setDetailedText(exceptionAsString);
+        } else {
+            report.setDetailedText("");
+        }
+
+        realm.commitTransaction();
+    }
+
+    public static void removeErrorReport(ErrorReportDAO errorReport) {
+        Realm realm = getRealm();
+        realm.beginTransaction();
+        errorReport.deleteFromRealm();
+        realm.commitTransaction();
+    }
+
+    public static Observable<PlayedPlaylistReportDAO> getPlayedPlaylistReports() {
+        Realm realm = getRealm();
+        return RealmResultsObservable
+                .from(realm.where(PlayedPlaylistReportDAO.class).findAll())
+                .switchIfEmpty(Observable.empty());
+    }
+
+
+    public static void addPlayedPlaylistReport(String playlistId) {
+        Realm realm = getRealm();
+        realm.beginTransaction();
+        PlayedPlaylistReportDAO report = realm.createObject(PlayedPlaylistReportDAO.class);
+        String date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(new Date());
+        report.setDate(date);
+        report.setPlaylistId(playlistId);
+        realm.commitTransaction();
+    }
+
+    public static void removePlaylistReport(PlayedPlaylistReportDAO playlistReport) {
+        Realm realm = getRealm();
+        realm.beginTransaction();
+        playlistReport.deleteFromRealm();
+        realm.commitTransaction();
     }
 }

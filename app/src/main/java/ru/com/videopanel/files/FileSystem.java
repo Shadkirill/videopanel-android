@@ -69,7 +69,6 @@ public class FileSystem {
         }
     }
 
-    //TODO add crc check
     private static long checksumMappedFile(String filepath) throws IOException {
         FileInputStream inputStream = new FileInputStream(filepath);
         FileChannel fileChannel = inputStream.getChannel();

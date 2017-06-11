@@ -5,7 +5,6 @@ apply plugin: 'io.fabric'
 
 repositories {
     maven { url 'https://maven.fabric.io/public' }
-    maven { url 'https://dl.bintray.com/drummer-aidan/maven' }
 }
 android {
     compileSdkVersion 25
@@ -66,7 +65,5 @@ dependencies {
     compile('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
         transitive = true;
     }
-    compile 'com.sromku:simple-storage:1.2.1'
     compile 'org.greenrobot:eventbus:3.0.0'
-    compile 'com.afollestad:easyvideoplayer:0.3.0'
 }

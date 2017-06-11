@@ -8,6 +8,7 @@ import android.util.Log;
 import org.greenrobot.eventbus.EventBus;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +48,10 @@ public class UpdateService extends Service {
         timerSubscribe = Observable.interval(0, 30, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(error -> Log.d("TICK", "ERROR", error))
+                .doOnError(error -> {
+                    Log.d("TICK", "ERROR", error);
+                    DBHelper.addErrorReport("UpdateService: update tick error", (Throwable) error);
+                })
                 .doOnNext(aLong ->
                         doOnUpdaterTick()
                 )
@@ -68,6 +72,14 @@ public class UpdateService extends Service {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .onErrorResumeNext(Observable.empty())
+                .map((token) -> {
+                    sendPlayedPlaylists(service, token);
+                    return token;
+                })
+                .map((token) -> {
+                    sendErrors(service);
+                    return token;
+                })
                 .flatMap(token -> getPlaylists(service, token))
                 .map(playlistInfos -> {
                     deleteOutdatedPlaylists(playlistInfos);
@@ -101,12 +113,65 @@ public class UpdateService extends Service {
                 .subscribe();
     }
 
+    private void sendErrors(VideoService service) {
+        DBHelper.getErrors()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .onErrorResumeNext(Observable.empty())
+                .map((errorReport) -> {
+                    HashMap<String, Object> body = new HashMap<>();
+                    body.put("date", errorReport.getDate());
+                    body.put("short_text", errorReport.getShortText());
+                    body.put("detailed_text", errorReport.getDetailedText());
+                    service.reportError(body)
+                            .subscribeOn(Schedulers.io()).subscribe(
+                            (response) -> {
+                                if (response.code() == 200) {
+                                    DBHelper.removeErrorReport(errorReport);
+                                }
+                                Log.d("sendErrors", String.valueOf(response.code() + " date " + errorReport.getShortText() + " text" + errorReport.getShortText()));
+                            },
+                            error -> Log.d("sendErrors", "ERROR", error),
+                            () -> {
+                            });
+
+                    return errorReport;
+                }).subscribe();
+    }
+
+    private void sendPlayedPlaylists(VideoService service, Token token) {
+        DBHelper.getPlayedPlaylistReports()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+//                .onErrorResumeNext(Observable.empty())
+                .map((playlistReport) -> {
+                    HashMap<String, Object> body = new HashMap<>();
+                    body.put("date", playlistReport.date);
+                    service.reportPlaylist(token.getToken(), playlistReport.playlistId, body)
+                            .subscribeOn(Schedulers.io()).subscribe(
+                            (response) -> {
+                                if (response.code() == 200) {
+                                    DBHelper.removePlaylistReport(playlistReport);
+                                }
+                                Log.d("sendPlayedPlaylists", String.valueOf(response.code() + " token" + token.getToken() + " playlist " + playlistReport.playlistId));
+                            },
+                            error -> Log.d("sendPlayedPlaylists", "ERROR", error),
+                            () -> {
+                            });
+
+                    return playlistReport;
+                }).subscribe();
+    }
+
     private void logout(VideoService service) {
         service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
                 (playlist) -> {
                     Log.d("LOGOUT", String.valueOf(playlist.code()));
                 },
-                error -> Log.d("LOGOUT", "ERROR", error),
+                error -> {
+                    Log.d("LOGOUT", "ERROR", error);
+                    DBHelper.addErrorReport("UpdateService: logout error", error);
+                },
                 () -> {
                 }
         );
@@ -117,13 +182,13 @@ public class UpdateService extends Service {
         return service.playlistData(playlistInfo.getId(), tempToken)
                 .doOnError(error -> {
                     Log.d("LOG", "ERROR", error);
+                    DBHelper.addErrorReport("UpdateService: getPlaylistData error", error);
                 })
                 .subscribeOn(Schedulers.io());
     }
 
     private void deleteOutdatedPlaylists(List<PlaylistInfo> playlistInfos) {
         stopPlaylistIfWeNeedDeleteIt(playlistInfos);
-        //TODO delete files
         DBHelper.deleteOther(playlistInfos);
     }
 
@@ -151,6 +216,7 @@ public class UpdateService extends Service {
                 String fileName = fileSystem.saveFile(getFilesDir(), playlist.getId(), item.getUrl(), item.getCrc32());
                 item.setUrl(fileName);
             } catch (IOException e) {
+                DBHelper.addErrorReport("UpdateService: loadFiles error", e);
                 Log.e("FILE LOAD ERROR", item.getUrl(), e);
             }
         }
