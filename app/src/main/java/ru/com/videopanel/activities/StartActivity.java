@@ -159,4 +159,8 @@ public class StartActivity extends AppCompatActivity {
         finish();
         startActivity(intent);
     }
+
+    public void senderror(View view) {
+        DBHelper.addErrorReport("Test error", new Exception("stacktrace"));
+    }
 }
