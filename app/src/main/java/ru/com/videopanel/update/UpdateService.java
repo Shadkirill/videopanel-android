@@ -103,51 +103,57 @@ public class UpdateService extends Service {
                     Log.d("LOADING", "finish ID:" + playlist.getId());
                     return playlist;
                 })
-                .doOnNext(playlist -> Log.d("SERVICETICK", "updated ID:" + playlist.getId()))
-                .doOnComplete(() ->
+                .subscribe(playlist -> Log.d("SERVICETICK", "updated ID:" + playlist.getId()),
+                        error -> Log.d("doOnlineTick", "ERROR", error),
+                        () ->
                         {
                             logout(service);
                             Log.d("SERVICETICK", "complete");
                         }
-                )
-                .subscribe();
+                );
     }
 
     private void sendErrors(VideoService service) {
         DBHelper.getErrors()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .onErrorResumeNext(Observable.empty())
+//                .onErrorResumeNext(Observable.empty())
                 .map((errorReport) -> {
                     HashMap<String, Object> body = new HashMap<>();
                     body.put("date", errorReport.getDate());
                     body.put("short_text", errorReport.getShortText());
                     body.put("detailed_text", errorReport.getDetailedText());
                     service.reportError(body)
-                            .subscribeOn(Schedulers.io()).subscribe(
+                            .subscribeOn(Schedulers.io())
+                            .doOnError(error -> Log.d("sendErrors", "ERROR", error))
+                            .subscribe(
                             (response) -> {
                                 if (response.code() == 200) {
                                     DBHelper.removeErrorReport(errorReport);
                                 }
-                                Log.d("sendErrors", String.valueOf(response.code() + " date " + errorReport.getShortText() + " text" + errorReport.getShortText()));
+                                Log.d("sendErrors", String.valueOf(response.code() + " date " + errorReport.getDate() + " text" + errorReport.getShortText()));
                             },
                             error -> Log.d("sendErrors", "ERROR", error),
                             () -> {
                             });
 
                     return errorReport;
-                }).subscribe();
+                })
+                .doOnError(error -> Log.d("sendPlayedPlaylists", "ERROR", error))
+                .subscribe();
     }
 
     private void sendPlayedPlaylists(VideoService service, Token token) {
         DBHelper.getPlayedPlaylistReports()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnError(error -> Log.d("sendPlayedPlaylists", "ERROR", error))
 //                .onErrorResumeNext(Observable.empty())
                 .map((playlistReport) -> {
                     HashMap<String, Object> body = new HashMap<>();
                     body.put("date", playlistReport.date);
                     service.reportPlaylist(token.getToken(), playlistReport.playlistId, body)
+                            .doOnError(error -> Log.d("sendPlayedPlaylists", "ERROR", error))
                             .subscribeOn(Schedulers.io()).subscribe(
                             (response) -> {
                                 if (response.code() == 200) {
@@ -160,11 +166,14 @@ public class UpdateService extends Service {
                             });
 
                     return playlistReport;
-                }).subscribe();
+                })
+                .subscribe();
     }
 
     private void logout(VideoService service) {
-        service.logout(tempToken).subscribeOn(Schedulers.io()).subscribe(
+        service.logout(tempToken).subscribeOn(Schedulers.io())
+                .doOnError(error -> Log.d("logout", "ERROR", error))
+                .subscribe(
                 (playlist) -> {
                     Log.d("LOGOUT", String.valueOf(playlist.code()));
                 },
