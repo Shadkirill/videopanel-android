@@ -24,13 +24,13 @@ public interface VideoService {
     Observable<Token> login(@Query("login") String login, @Query("password") String password);
 
     @GET("auth/logout")
-    Observable<Response<Void>> logout(@Query("token") String token);
+    Observable<Response<Void>> logout(@Header("token") String token);
 
     @GET("playlists")
-    Observable<List<PlaylistInfo>> playlists(@Query("token") String token);
+    Observable<List<PlaylistInfo>> playlists(@Header("token") String token);
 
     @GET("playlist/{id}")
-    Observable<Playlist> playlistData(@Path("id") int groupId, @Query("token") String token);
+    Observable<Playlist> playlistData(@Path("id") int groupId, @Header("token") String token);
 
     @POST("report/error")
     Observable<Response<Void>> reportError(@Body HashMap<String, Object> body);
