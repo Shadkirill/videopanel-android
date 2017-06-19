@@ -160,7 +160,7 @@ public class StartActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void senderror(View view) {
-        DBHelper.addErrorReport("Test error", new Exception("stacktrace"));
-    }
+//    public void senderror(View view) {
+//        DBHelper.addErrorReport("Test error", new Exception("stacktrace"));
+//    }
 }
