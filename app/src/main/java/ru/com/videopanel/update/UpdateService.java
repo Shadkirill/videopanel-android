@@ -45,7 +45,7 @@ public class UpdateService extends Service {
     public void onCreate() {
         fileSystem = new FileSystem();
         preferenceUtil = new PreferenceUtil(getApplicationContext());
-        timerSubscribe = Observable.interval(0, 30, TimeUnit.SECONDS)
+        timerSubscribe = Observable.timer(30, TimeUnit.SECONDS)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(error -> {
@@ -109,6 +109,7 @@ public class UpdateService extends Service {
                         {
                             logout(service);
                             Log.d("SERVICETICK", "complete");
+                            onCreate();
                         }
                 );
     }

@@ -123,7 +123,7 @@ public class ShowActivity extends AppCompatActivity {
                 .subscribe(
                         playlist -> {
                             currentPlaylist = playlist;
-                            Log.d("PLAYLIST", "NEWLIST: " + currentPlaylist.getId());
+//                            Log.d("PLAYLIST", "NEWLIST: " + currentPlaylist.getId());
                             if (currentPlaylist.getId() == null) {
                                 showNothing();
                                 Handler handler = new Handler();
@@ -192,7 +192,7 @@ public class ShowActivity extends AppCompatActivity {
             Log.d("PLAYLIST", "PLAYERROR");
             DBHelper.addErrorReport("Show Activity: Video load error. Video file:" + nextContent.getUrl(), null);
 //            showNextContent();
-            return false;
+            return true;
         });
         nextVideoView.setOnCompletionListener(mp -> {
             showNextContent();

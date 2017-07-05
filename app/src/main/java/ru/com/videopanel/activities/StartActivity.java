@@ -42,6 +42,8 @@ public class StartActivity extends AppCompatActivity {
             startShow();
         }
 
+        DBHelper.deleteDownloadingPlaylist();
+
         dialog = new ProgressDialog(this);
         dialog.setMessage("Идет проверка данных");
         dialog.setCancelable(false);

@@ -114,6 +114,18 @@ public class DBHelper {
         Log.d("Check", "replace");
     }
 
+    public static void deleteDownloadingPlaylist() {
+        Realm realm = getRealm();
+        RealmResults<PlaylistDAO> allOld = realm.where(PlaylistDAO.class)
+                .equalTo(PlaylistDAO.COL_DOWNLOADING, true).findAll();
+        realm.beginTransaction();
+        if (!allOld.isEmpty())
+            deletePlaylitsRecursive(allOld);
+
+        realm.commitTransaction();
+        Log.d("OnStart", "Removed all not downloaded playlists");
+    }
+
     private static void deletePlaylitsRecursive(RealmResults<PlaylistDAO> delete) {
         for (PlaylistDAO playlistDAO : delete) {
             playlistDAO.getItems().deleteAllFromRealm();
