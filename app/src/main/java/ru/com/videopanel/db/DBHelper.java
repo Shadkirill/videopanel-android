@@ -131,23 +131,23 @@ public class DBHelper {
 
 
     public static void addErrorReport(String shortText, Throwable throwable) {
-        Realm realm = getRealm();
-        realm.beginTransaction();
-        ErrorReportDAO report = realm.createObject(ErrorReportDAO.class);
-        String date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(new Date());
-        report.setDate(date);
-        report.setShortText(shortText);
-
-        if (throwable != null) {
-            StringWriter sw = new StringWriter();
-            throwable.printStackTrace(new PrintWriter(sw));
-            String exceptionAsString = sw.toString();
-            report.setDetailedText(exceptionAsString);
-        } else {
-            report.setDetailedText("");
-        }
-
-        realm.commitTransaction();
+//        Realm realm = getRealm();
+//        realm.beginTransaction();
+//        ErrorReportDAO report = realm.createObject(ErrorReportDAO.class);
+//        String date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(new Date());
+//        report.setDate(date);
+//        report.setShortText(shortText);
+//
+//        if (throwable != null) {
+//            StringWriter sw = new StringWriter();
+//            throwable.printStackTrace(new PrintWriter(sw));
+//            String exceptionAsString = sw.toString();
+//            report.setDetailedText(exceptionAsString);
+//        } else {
+//            report.setDetailedText("");
+//        }
+//
+//        realm.commitTransaction();
     }
 
     public static void removeErrorReport(ErrorReportDAO errorReport) {
@@ -166,13 +166,13 @@ public class DBHelper {
 
 
     public static void addPlayedPlaylistReport(String playlistId) {
-        Realm realm = getRealm();
-        realm.beginTransaction();
-        PlayedPlaylistReportDAO report = realm.createObject(PlayedPlaylistReportDAO.class);
-        String date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(new Date());
-        report.setDate(date);
-        report.setPlaylistId(playlistId);
-        realm.commitTransaction();
+//        Realm realm = getRealm();
+//        realm.beginTransaction();
+//        PlayedPlaylistReportDAO report = realm.createObject(PlayedPlaylistReportDAO.class);
+//        String date = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.US).format(new Date());
+//        report.setDate(date);
+//        report.setPlaylistId(playlistId);
+//        realm.commitTransaction();
     }
 
     public static void removePlaylistReport(PlayedPlaylistReportDAO playlistReport) {
